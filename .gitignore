@@ -1,3 +1,9 @@
+# venv
+catenv/
+
+# egg-info
+catenae.egg-info/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
