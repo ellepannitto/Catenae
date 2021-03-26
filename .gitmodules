@@ -1,0 +1,3 @@
+[submodule "FileMerger"]
+	path = FileMerger
+	url = https://github.com/ellepannitto/FileMerger
