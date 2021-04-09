@@ -3,26 +3,32 @@ import string
 import collections
 import itertools
 import uuid
+import glob
+import gzip
+import math
 
 from catenae.utils import files_utils as futils
 from catenae.utils import data_utils as dutils
 from catenae.utils import corpus_utils as cutils
 
+from FileMerger.filesmerger import core as fmerger
+
 
 logger = logging.getLogger(__name__)
 
 
-def recursive_C(A, tree_children, th=5):
+def recursive_C(A, tree_children, min_len_catena, max_len_catena):
     # if A is a leaf
     if A not in tree_children:
-        return [[A]], [[A]]
+        # return [[A]], [[A]]
+        return [[A]], []
 
     else:
         found_catenae = []
         list_of_indep_catenae = [[[A]]]
 
         for a_child in tree_children[A]:
-            c, all_c = recursive_C(a_child, tree_children)
+            c, all_c = recursive_C(a_child, tree_children, min_len_catena, max_len_catena)
 
             found_catenae += all_c
             list_of_indep_catenae.append([[None]] + c)
@@ -30,13 +36,14 @@ def recursive_C(A, tree_children, th=5):
         X = []
         for tup in itertools.product(*list_of_indep_catenae):
             new_catena = list(sorted(filter(lambda x: x is not None, sum(tup, []))))
-            if len(new_catena) <= th:
+            if len(new_catena) >= min_len_catena and len(new_catena) <= max_len_catena:
                 X.append(new_catena)
 
         return X, X+found_catenae
 
 
-def process(sentence, freqdict, catdict, totalsdict):
+def process_sentence(sentence, freqdict, catdict, totalsdict,
+                     min_len_catena, max_len_catena):
     admitted_chars = string.ascii_letters+".-' "
 
     children = {}
@@ -72,12 +79,10 @@ def process(sentence, freqdict, catdict, totalsdict):
 
     if 0 in children:
         root = children[0][0]
-        _, catenae = recursive_C(root, children)
+        _, catenae = recursive_C(root, children, min_len_catena, max_len_catena)
 
         for catena in catenae:
             if all(x not in tokens_to_remove for x in catena):
-                print("CATENA:", catena)
-                input()
 
                 tokensandpostags = [[tokens[x] for x in catena],
                                     [postags[x] for x in catena],
@@ -91,15 +96,22 @@ def process(sentence, freqdict, catdict, totalsdict):
                     for i, el in enumerate(c):
                         cat.append(tokensandpostags[el][i])
                     cat = tuple(cat)
-                    print(cat)
+
                     if len(cat) > 1:
                         catdict[cat] += 1
                     totalsdict[(len(cat))] += 1
 
 
+def extract_coccurrences(output_dir, corpus_dir,
+                         min_len_sentence, max_len_sentence, sentences_batch_size,
+                         min_freq, min_len_catena, max_len_catena):
+    pass
+
 def extract_catenae(output_dir, input_dir,
                     min_len_sentence, max_len_sentence, sentences_batch_size,
-                    min_freq):
+                    min_freq,
+                    min_len_catena, max_len_catena):
+
     filenames = futils.get_filenames(input_dir)
 
     for filename in filenames:
@@ -117,14 +129,15 @@ def extract_catenae(output_dir, input_dir,
                 if sentence:
                     if not sentence_no % 100:
                         logger.info("{} - {}".format(sentence_no, len(sentence)))
-                    process(sentence, freqdict, catdict, totalsdict)
+                    process_sentence(sentence, freqdict, catdict, totalsdict,
+                                     min_len_catena, max_len_catena)
 
             filename_uuid = str(uuid.uuid4())
-            with open(out_dir + "/catenae-freq-" + filename_uuid, "w") as fout_catenae, \
-                    open(out_dir + "/items-freq-" + filename_uuid, "w") as fout_items, \
-                    open(out_dir + "/totals-freq-" + filename_uuid, "w") as fout_totals:
+            with open(output_dir + "/catenae-freq-" + filename_uuid, "w") as fout_catenae, \
+                    open(output_dir + "/items-freq-" + filename_uuid, "w") as fout_items, \
+                    open(output_dir + "/totals-freq-" + filename_uuid, "w") as fout_totals:
 
-                print("sorting and printing")
+                logger.info("Sorting catenae and printing")
 
                 sorted_catdict = sorted(catdict.items(), key=lambda x: x[0])
                 sorted_freqdict = sorted(freqdict.items(), key=lambda x: x[0])
@@ -140,48 +153,82 @@ def extract_catenae(output_dir, input_dir,
                 for item, freq in sorted_totalsdict:
                     print("{}\t{}".format(item, freq), file=fout_totals)
 
-    merge_and_collapse_pattern(out_dir+"/catenae-freq-*", output_filename=out_dir+"/catenae-freq-summed.txt")
-    merge_and_collapse_pattern(out_dir+"/items-freq-*", output_filename=out_dir+"/items-freq-summed.txt")
-    merge_and_collapse_pattern(out_dir+"/totals-freq-*", output_filename=out_dir+"/totals-freq-summed.txt")
+    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/catenae-freq-*"),
+                                        output_filename=output_dir + "/catenae-freq-summed.gz",
+                                        delete_input=True)
+    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/items-freq-*"),
+                                        output_filename=output_dir + "/items-freq-summed.gz",
+                                        delete_input=True)
+    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/totals-freq-*"),
+                                        output_filename=output_dir + "/totals-freq-summed.gz",
+                                        delete_input=True)
+
+
+def compute_mi(cur_line, freqdict_totals, freqdict_items):
+
+    cur_linesplit = cur_line.strip().split("\t")
+    cur_catena = cur_linesplit[0].split(" ")
+    cur_freq = float(cur_linesplit[1])
+
+    p_catena = cur_freq / freqdict_totals[str(len(cur_catena))]
+    p_els = 1
+    for cur_item in cur_catena:
+        p = freqdict_items[cur_item] / freqdict_totals['1']
+        p_els *= p
+
+    ret_mi = cur_freq * math.log(p_catena / p_els, 2)
+    return ret_mi
+
+
+def weight_catenae(output_dir, items_filepath, totals_filepath, catenae_filepath):
 
     freqdict_items = {}
-    with open(out_dir+"/items-freq-summed.txt") as fin:
+    with gzip.open(items_filepath, "rt") as fin:
         for line in fin:
             linesplit = line.strip().split("\t")
             freqdict_items[linesplit[0]] = float(linesplit[1])
 
     freqdict_totals = {}
-    with open(out_dir+"/totals-freq-summed.txt") as fin:
+    with gzip.open(totals_filepath, "rt") as fin:
         for line in fin:
             linesplit = line.strip().split("\t")
             freqdict_totals[linesplit[0]] = float(linesplit[1])
 
-    def compute_mi(cur_line):
-
-        cur_linesplit = cur_line.strip().split("\t")
-        cur_catena = cur_linesplit[0].split(" ")
-        cur_freq = float(cur_linesplit[1])
-
-        p_catena = cur_freq / freqdict_totals[str(len(cur_catena))]
-        p_els = 1
-        for cur_item in cur_catena:
-            p = freqdict_items[cur_item] / freqdict_totals['1']
-            p_els *= p
-
-        ret_mi = cur_freq * math.log(p_catena / p_els, 2)
-
-        return ret_mi
-
-    with open(out_dir + "/catenae-freq-summed.txt") as fin, open(out_dir+"/catenae-final.txt", "w") as fout:
+    with gzip.open(catenae_filepath, "rt") as fin, open(output_dir + "/catenae-weighted.txt", "w") as fout:
         catenae_list = []
         for line in fin:
             linesplit = line.strip().split("\t")
             catena = linesplit[0].split(" ")
             freq = float(linesplit[1])
-            mi = compute_mi(line)
+            mi = compute_mi(line, freqdict_totals, freqdict_items)
             catenae_list.append((catena, freq, mi))
 
         sorted_catenae = sorted(catenae_list, key=lambda x: (-x[2], x[0]))
 
+        print("CATENA\tFREQ\tW", file=fout)
         for catena, freq, mi in sorted_catenae:
             print("{}\t{}\t{}".format(" ".join(catena), freq, mi), file=fout)
+
+
+def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold,
+                              min_len_catena, max_len_catena):
+
+
+    with open(input_file) as fin, open(output_dir+"/catenae-filtered.txt", "w") as fout:
+        print(fin.readline().strip(), file=fout)
+        for line in fin:
+            line = line.strip().split("\t")
+            catena, freq, weight = line
+            catena = catena.split()
+            freq = float(freq)
+            weight = float(weight)
+
+            if min_len_catena <= len(catena) <= max_len_catena and \
+                freq > frequency_threshold and \
+                weight > weight_threshold:
+
+                print("{}\t{}\t{}".format(" ".join(catena), freq, weight), file=fout)
+                # print(catena, freq, weight)
+            # else:
+            #     print("NOT ACCEPTED", catena, freq, weight)
+            # input()
