@@ -66,7 +66,7 @@ def _extract_cooccurrences(args):
     min_len_catena = args.min_len_catena
     max_len_catena = args.max_len_catena
 
-    extraction.extract_coccurrences(output_dir, corpus_dir,
+    extraction.extract_coccurrences(output_dir, corpus_dir, accepted_catenae_filepath,
                                     min_len_sentence, max_len_sentence, sentences_batch_size,
                                     min_freq, min_len_catena, max_len_catena)
 
@@ -150,8 +150,10 @@ def main():
                               help="number of sentences in batch when extracting catenae")
     parser_coocc.add_argument("-f", "--frequency-threshold", type=int, default=1,
                               help="frequency threshold applied in each batch for a catena to be kept")
-    parser_coocc.add_argument("--min-len-catena", type=int, default=0)
-    parser_coocc.add_argument("--max-len-catena", type=int, default=100)
+    parser_coocc.add_argument("--min-len-catena", type=int, default=0,
+                              help="minimium length for each catena to be kept")
+    parser_coocc.add_argument("--max-len-catena", type=int, default=3,
+                              help="maximum length for each catena to be kept. WARNING: highly impacts ram usage")
     parser_coocc.set_defaults(func=_extract_cooccurrences)
 
     args = root_parser.parse_args()

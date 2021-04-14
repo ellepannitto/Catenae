@@ -8,8 +8,8 @@ def PlainCoNLLReader(filepath, min_len=0, max_len=300):
                 if min_len < len(sentence) < max_len:
                     if to_include:
                         yield sentence
-                    sentence = []
-                    to_include = True
+                sentence = []
+                to_include = True
                 if line.startswith("speaker: CHI"):
                     to_include = False
             else:
