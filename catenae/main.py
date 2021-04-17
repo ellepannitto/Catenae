@@ -5,6 +5,7 @@ import os
 
 from catenae.utils import config_utils as cutils
 from catenae.core import extraction as extraction
+from catenae.core import dsm as dsm
 
 config_dict = cutils.load(os.path.join(os.path.dirname(__file__), 'logging_utils', 'logging.yml'))
 logging.config.dictConfig(config_dict)
@@ -57,6 +58,7 @@ def _extract_cooccurrences(args):
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
     accepted_catenae_filepath = args.accepted_catenae
+    top_k = args.topk
 
     min_len_sentence = args.min_len_sentence
     max_len_sentence = args.max_len_sentence
@@ -66,9 +68,14 @@ def _extract_cooccurrences(args):
     min_len_catena = args.min_len_catena
     max_len_catena = args.max_len_catena
 
-    extraction.extract_coccurrences(output_dir, corpus_dir, accepted_catenae_filepath,
+    extraction.extract_coccurrences(output_dir, corpus_dir, accepted_catenae_filepath, top_k,
                                     min_len_sentence, max_len_sentence, sentences_batch_size,
                                     min_freq, min_len_catena, max_len_catena)
+
+
+def _build_dsm(args):
+    dsm.build()
+
 
 def main():
     root_parser = argparse.ArgumentParser(prog='catenae', formatter_class=RawTextHelpFormatter)
@@ -142,6 +149,8 @@ def main():
                               help="path to corpus directory")
     parser_coocc.add_argument("-a", "--accepted-catenae",
                               help="filepth containing accepted catenae")
+    parser_coocc.add_argument("-k", "--topk", type=float, default=float("inf"),
+                              help="number of catenae to load")
     parser_coocc.add_argument("-m", "--min-len-sentence", type=int, default=1,
                               help="minimum length for sentences to be considered")
     parser_coocc.add_argument("-M", "--max-len-sentence", type=int, default=25,
@@ -155,6 +164,12 @@ def main():
     parser_coocc.add_argument("--max-len-catena", type=int, default=3,
                               help="maximum length for each catena to be kept. WARNING: highly impacts ram usage")
     parser_coocc.set_defaults(func=_extract_cooccurrences)
+
+    parser_dsm = subparsers.add_parser("build-dsm",
+                                       description="build distributional space model",
+                                       help="build distributional space model",
+                                       formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_dsm.set_defaults(func=_build_dsm)
 
     args = root_parser.parse_args()
     if "func" not in args:

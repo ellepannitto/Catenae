@@ -6,14 +6,17 @@ def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
     return itertools.zip_longest(*args, fillvalue=fillvalue)
 
-def load_catenae_set(filepath):
+def load_catenae_set(filepath, topk):
 
     catenae = set()
     with open(filepath) as fin:
         fin.readline()
-        for line in fin:
-            line = line.strip().split("\t")
-            catena, _, _ = line
-            catenae.add(catena)
+        for lineno, line in enumerate(fin):
+            if lineno < topk:
+                line = line.strip().split("\t")
+                catena, _, _ = line
+                catenae.add(catena)
+            else:
+                break
 
     return catenae

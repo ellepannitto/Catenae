@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 def recursive_C(A, tree_children, min_len_catena, max_len_catena):
     # if A is a leaf
     if A not in tree_children:
-
         return [[A]], [[A]]
         # return [[A]], []
 
@@ -99,11 +98,12 @@ def process_sentence(sentence, freqdict, catdict, totalsdict,
                     cat = tuple(cat)
 
                     # if len(cat) > 1:
-                    catdict[cat] += 1
+                    catdict["|".join(cat)] += 1
                     totalsdict[(len(cat))] += 1
 
 
-def process_cooccurrences(sentence, coocc_dict, accepted_catenae, min_len_catena, max_len_catena):
+def process_cooccurrences(sentence, coocc_dict, catenae_freq,
+                          accepted_catenae, min_len_catena, max_len_catena):
 
     admitted_chars = string.ascii_letters+".-' "
 
@@ -161,13 +161,17 @@ def process_cooccurrences(sentence, coocc_dict, accepted_catenae, min_len_catena
         for str_cat_i, str_cat_j in itertools.combinations(explicit_catenae, 2):
             str_cat_i, str_cat_j = min(str_cat_i, str_cat_j), max(str_cat_i, str_cat_j)
             coocc_dict[(str_cat_i, str_cat_j)] += 1
+            catenae_freq[str_cat_i] += 1
+            catenae_freq[str_cat_j] += 1
 
 
-def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath,
+def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k,
                          min_len_sentence, max_len_sentence, sentences_batch_size,
                          min_freq, min_len_catena, max_len_catena):
 
-    accepted_catenae = dutils.load_catenae_set(accepted_catenae_filepath)
+    # TODO: add parameter for top K
+    accepted_catenae = dutils.load_catenae_set(accepted_catenae_filepath, top_k)
+    # accepted_catenae = dutils.load_catenae_set(accepted_catenae_filepath, 10000)
 
     filenames = futils.get_filenames(input_dir)
 
@@ -179,20 +183,23 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath,
         for batch_no, batch in enumerate(iterator):
             logger.info("Processing batch n. {}".format(batch_no))
             coocc_dict = collections.defaultdict(int)
+            catenae_freq = collections.defaultdict(int)
 
             for sentence_no, sentence in enumerate(batch):
                 if sentence:
                     if not sentence_no % 100:
                         logger.info("{} - {}".format(sentence_no, len(sentence)))
                     process_cooccurrences(sentence, coocc_dict,
+                                          catenae_freq,
                                           accepted_catenae,
                                           min_len_catena, max_len_catena)
 
                     # print(coocc_dict)
                     # input()
 
-            sorted_cooc = sorted(coocc_dict.items())
             filename_uuid = str(uuid.uuid4())
+
+            sorted_cooc = sorted(coocc_dict.items())
             with open(output_dir + "/catenae-coocc-" + filename_uuid, "w") as fout_catenae:
                 for cats, freq in sorted_cooc:
                     if freq > min_freq:
@@ -202,8 +209,17 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath,
                         #     input()
                         print("{} {}\t{}".format(cat_i, cat_j, freq), file=fout_catenae)
 
+            sorted_cats = sorted(catenae_freq.items())
+            with open(output_dir + "/catenae-freqs-" + filename_uuid, "w") as fout_catenae:
+                for cat, freq in sorted_cats:
+
+                    print("{}\t{}".format(cat, freq), file=fout_catenae)
+
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/catenae-coocc-*"),
                                         output_filename=output_dir + "/catenae-coocc-summed.gz",
+                                        delete_input=True)
+    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/catenae-freqs-*"),
+                                        output_filename=output_dir + "/catenae-freqs-summed.gz",
                                         delete_input=True)
 
 
@@ -245,7 +261,7 @@ def extract_catenae(output_dir, input_dir,
 
                 for catena, freq in sorted_catdict:
                     if freq > min_freq:
-                        print("{}\t{}".format("|".join(catena), freq), file=fout_catenae)
+                        print("{}\t{}".format(catena, freq), file=fout_catenae)
 
                 for item, freq in sorted_freqdict:
                     print("{}\t{}".format(item, freq), file=fout_items)
@@ -255,13 +271,13 @@ def extract_catenae(output_dir, input_dir,
 
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/catenae-freq-*"),
                                         output_filename=output_dir + "/catenae-freq-summed.gz",
-                                        delete_input=True)
+                                        delete_input=False)
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/items-freq-*"),
                                         output_filename=output_dir + "/items-freq-summed.gz",
-                                        delete_input=True)
+                                        delete_input=False)
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/totals-freq-*"),
                                         output_filename=output_dir + "/totals-freq-summed.gz",
-                                        delete_input=True)
+                                        delete_input=False)
 
 
 def compute_mi(cur_line, freqdict_totals, freqdict_items):
