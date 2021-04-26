@@ -68,13 +68,23 @@ def _extract_cooccurrences(args):
     min_len_catena = args.min_len_catena
     max_len_catena = args.max_len_catena
 
+    include_words = args.include_len_one_items
+    words_filepath = args.words_filepath
+
     extraction.extract_coccurrences(output_dir, corpus_dir, accepted_catenae_filepath, top_k,
                                     min_len_sentence, max_len_sentence, sentences_batch_size,
-                                    min_freq, min_len_catena, max_len_catena)
+                                    min_freq, min_len_catena, max_len_catena,
+                                    include_words, words_filepath)
 
 
 def _build_dsm(args):
-    dsm.build()
+
+    output_dir = args.output_dir
+    cooccurrences_filepath = args.cooccurrences_filepath
+    frequences_filepath = args.frequences_filepath
+    TOT = args.total
+
+    dsm.build(output_dir, cooccurrences_filepath, frequences_filepath, TOT)
 
 
 def main():
@@ -163,12 +173,21 @@ def main():
                               help="minimium length for each catena to be kept")
     parser_coocc.add_argument("--max-len-catena", type=int, default=3,
                               help="maximum length for each catena to be kept. WARNING: highly impacts ram usage")
+    parser_coocc.add_argument("--include-len-one-items", action='store_true',
+                              help="include words regardless of their frequency and weight values")
+    parser_coocc.add_argument("--words-filepath",
+                              help="filepath to words list, to include if len one items are required")
     parser_coocc.set_defaults(func=_extract_cooccurrences)
 
     parser_dsm = subparsers.add_parser("build-dsm",
                                        description="build distributional space model",
                                        help="build distributional space model",
                                        formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_dsm.add_argument("-o", "--output-dir", default="data/results/",
+                            help="path to output dir, default is data/results/")
+    parser_dsm.add_argument("-c", "--cooccurrences-filepath", required=True)
+    parser_dsm.add_argument("-f", "--frequences-filepath", required=True)
+    parser_dsm.add_argument("-t", "--total", type=int, required=True)
     parser_dsm.set_defaults(func=_build_dsm)
 
     args = root_parser.parse_args()

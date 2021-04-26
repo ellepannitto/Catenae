@@ -167,13 +167,17 @@ def process_cooccurrences(sentence, coocc_dict, catenae_freq,
 
 def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k,
                          min_len_sentence, max_len_sentence, sentences_batch_size,
-                         min_freq, min_len_catena, max_len_catena):
+                         min_freq, min_len_catena, max_len_catena,
+                         include_words, words_filepath):
 
     # TODO: add parameter for top K
     accepted_catenae = dutils.load_catenae_set(accepted_catenae_filepath, top_k)
-    # accepted_catenae = dutils.load_catenae_set(accepted_catenae_filepath, 10000)
+
+    if include_words:
+        accepted_catenae = dutils.load_catenae_set(words_filepath, float('inf'), accepted_catenae)
 
     filenames = futils.get_filenames(input_dir)
+    total_freqs_global = 0
 
     for filename in filenames:
         logger.info("Processing file {}".format(filename))
@@ -194,9 +198,6 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k
                                           accepted_catenae,
                                           min_len_catena, max_len_catena)
 
-                    # print(coocc_dict)
-                    # input()
-
             filename_uuid = str(uuid.uuid4())
 
             sorted_cooc = sorted(coocc_dict.items())
@@ -204,16 +205,16 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k
                 for cats, freq in sorted_cooc:
                     if freq > min_freq:
                         cat_i, cat_j = cats
-                        # if len(cat_i.split(" ")) > 1 or len(cat_j.split(" ")) > 1:
-                        #     print(cats)
-                        #     input()
                         print("{} {}\t{}".format(cat_i, cat_j, freq), file=fout_catenae)
 
             sorted_cats = sorted(catenae_freq.items())
+            total_freqs_partial = 0
             with open(output_dir + "/catenae-freqs-" + filename_uuid, "w") as fout_catenae:
                 for cat, freq in sorted_cats:
-
+                    total_freqs_partial += freq
                     print("{}\t{}".format(cat, freq), file=fout_catenae)
+
+            total_freqs_global += total_freqs_partial
 
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/catenae-coocc-*"),
                                         output_filename=output_dir + "/catenae-coocc-summed.gz",
@@ -221,6 +222,9 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/catenae-freqs-*"),
                                         output_filename=output_dir + "/catenae-freqs-summed.gz",
                                         delete_input=True)
+
+    with open(output_dir + "/totals-freqs.txt", "wt") as fout_total:
+        print("TOTAL\t{}".format(total_freqs_global), file=fout_total)
 
 
 def extract_catenae(output_dir, input_dir,
@@ -271,13 +275,13 @@ def extract_catenae(output_dir, input_dir,
 
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/catenae-freq-*"),
                                         output_filename=output_dir + "/catenae-freq-summed.gz",
-                                        delete_input=False)
+                                        delete_input=True)
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/items-freq-*"),
                                         output_filename=output_dir + "/items-freq-summed.gz",
-                                        delete_input=False)
+                                        delete_input=True)
     fmerger.merge_and_collapse_iterable(glob.iglob(output_dir + "/totals-freq-*"),
                                         output_filename=output_dir + "/totals-freq-summed.gz",
-                                        delete_input=False)
+                                        delete_input=True)
 
 
 def compute_mi(cur_line, freqdict_totals, freqdict_items):
@@ -337,7 +341,7 @@ def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold
         for line in fin:
             line = line.strip().split("\t")
             catena, freq, weight = line
-            catena = catena.split()
+            catena = catena.split("|")
             freq = float(freq)
             weight = float(weight)
 
