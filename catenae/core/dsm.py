@@ -1,14 +1,26 @@
+import logging
+import collections
 import gzip
 import math
 
+import numpy as np
+import scipy as sp
+from scipy.sparse.linalg import svds, eigs
+
 from FileMerger.filesmerger import utils as fmergerutils
 
-def build(output_dir, coocc_filepath, freqs_filepath, TOT):
+logger = logging.getLogger(__name__)
+
+def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
+
+    item_to_id = {}
+    id_max = 0
+    matrix = collections.defaultdict(lambda: {})
 
     with fmergerutils.open_file_by_extension(coocc_filepath) as fin_cocc, \
-        fmergerutils.open_file_by_extension(freqs_filepath) as fin_freqs_left, \
-        fmergerutils.open_file_by_extension(freqs_filepath) as fin_freqs_right, \
-        gzip.open(output_dir + "catenae-ppmi.gz", "wt") as fout:
+         fmergerutils.open_file_by_extension(freqs_filepath) as fin_freqs_left, \
+         fmergerutils.open_file_by_extension(freqs_filepath) as fin_freqs_right, \
+         gzip.open(output_dir + "catenae-ppmi.gz", "wt") as fout:
 
         lineno = 1
 
@@ -22,7 +34,6 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT):
         line_freq_right = fin_freqs_right.readline()
         cat_r, freq_r = line_freq_right.strip().split("\t")
         freq_r = float(freq_r)
-
 
         while line_cocc:
 
@@ -46,7 +57,6 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT):
                 cat_r, freq_r = line_freq_right.strip().split("\t")
                 freq_r = float(freq_r)
 
-
             while cat_r < cat2:
                 line_freq_right = fin_freqs_right.readline()
                 cat_r, freq_r = line_freq_right.strip().split("\t")
@@ -58,13 +68,39 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT):
             ppmi = freq * math.log(freq*TOT/(freq_l*freq_r))
             if ppmi > 0:
                 print("{}\t{}\t{}\t{}".format(cat1, cat2, freq, ppmi), file=fout)
-                # print(cat1, cat2, freq, "---", cat_l, freq_l, "---", cat_r, freq_r, "---", ppmi)
-            # else:
-                # print("REMOVE", cat1, cat2, freq)
-            # input()
+
+            if not cat1 in item_to_id:
+                item_to_id[cat1] = id_max
+                id_max += 1
+
+            if not cat2 in item_to_id:
+                item_to_id[cat2] = id_max
+                id_max += 1
+
+            matrix[item_to_id[cat1]][item_to_id[cat2]] = ppmi
+            matrix[item_to_id[cat2]][item_to_id[cat1]] = ppmi
 
             line_cocc = fin_cocc.readline()
             lineno += 1
 
-            if not lineno%10000:
-                print("PROCESSING LINE", lineno)
+            if not lineno % 10000:
+                logger.info("PROCESSING LINE {}".format(lineno))
+
+    id_to_item = [0]*id_max
+    for item, id in item_to_id.items():
+        id_to_item[id] = item
+
+    S = sp.sparse.dok_matrix((id_max, id_max), dtype=np.float32)
+
+    for el1 in matrix:
+        for el2 in matrix[el1]:
+            S[el1, el2] = matrix[el1][el2]
+
+    S = sp.sparse.csc_matrix(S)
+    u, s, vt = svds(S, k=svd_dim)
+
+    with gzip.open(output_dir + "catenae-dsm.gz", "wt") as fout:
+        el_no = 0
+        for el in u:
+            print("{}\t{}".format(id_to_item[el_no], " ".join(str(x) for x in el)), file=fout)
+            el_no += 1
