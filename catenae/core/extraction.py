@@ -6,6 +6,7 @@ import uuid
 import glob
 import gzip
 import math
+import tqdm
 
 from catenae.utils import files_utils as futils
 from catenae.utils import data_utils as dutils
@@ -304,19 +305,25 @@ def weight_catenae(output_dir, items_filepath, totals_filepath, catenae_filepath
 
     freqdict_items = {}
     with gzip.open(items_filepath, "rt") as fin:
-        for line in fin:
+        logger.info("reading items...")
+        for line in tqdm.tqdm(fin):
             linesplit = line.strip().split("\t")
             freqdict_items[linesplit[0]] = float(linesplit[1])
 
     freqdict_totals = {}
     with gzip.open(totals_filepath, "rt") as fin:
-        for line in fin:
+        logger.info("reading totals")
+        for line in tqdm.tqdm(fin):
             linesplit = line.strip().split("\t")
             freqdict_totals[linesplit[0]] = float(linesplit[1])
 
-    with gzip.open(catenae_filepath, "rt") as fin, open(output_dir + "/catenae-weighted.txt", "w") as fout:
+    with gzip.open(catenae_filepath, "rt") as fin, \
+         gzip.open(output_dir + "/catenae-weighted.gz", "wt") as fout:
+
+        print("CATENA\tFREQ\tW", file=fout)
+        logger.info("weighting catenae...")
         catenae_list = []
-        for line in fin:
+        for line in tqdm.tqdm(fin):
             linesplit = line.strip().split("\t")
             catena = linesplit[0].split("|")
             freq = float(linesplit[1])
@@ -324,13 +331,15 @@ def weight_catenae(output_dir, items_filepath, totals_filepath, catenae_filepath
                 mi = freq / freqdict_totals['1']
             else:
                 mi = compute_mi(line, freqdict_totals, freqdict_items)
-            catenae_list.append((catena, freq, mi))
 
-        sorted_catenae = sorted(catenae_list, key=lambda x: (-x[2], x[0]))
-
-        print("CATENA\tFREQ\tW", file=fout)
-        for catena, freq, mi in sorted_catenae:
             print("{}\t{}\t{}".format("|".join(catena), freq, mi), file=fout)
+            # catenae_list.append((catena, freq, mi))
+
+        # sorted_catenae = sorted(catenae_list, key=lambda x: (-x[2], x[0]))
+
+
+        # for catena, freq, mi in sorted_catenae:
+        #     print("{}\t{}\t{}".format("|".join(catena), freq, mi), file=fout)
 
 
 def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold,

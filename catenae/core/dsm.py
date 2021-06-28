@@ -35,6 +35,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
         cat_r, freq_r = line_freq_right.strip().split("\t")
         freq_r = float(freq_r)
 
+
         while line_cocc:
 
             cats, freq = line_cocc.strip().split("\t")
