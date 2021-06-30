@@ -86,7 +86,7 @@ Here is a working example:
                    -t data/results/totals-freq-summed.gz 
                    -c data/output_test/catenae-freq-summed.gz 
 
-The script will produce a file named `catenae-weighted.txt` in the output 
+The script will produce a file named `catenae-weighted.gz` in the output 
 folder.
 The file has three tab-separated columns, formatted as follows:
 
@@ -124,7 +124,7 @@ Here is a working example:
                    -M 3
 
 The script will produce a file named `catenae-filtered.txt`, 
-formatted like `catenae-weighted.txt` but containing catenae with
+formatted like `catenae-weighted.gz` but containing catenae with
 minimum frequency of 100 (`-f`), positive mutual information (`-w`),
 and length between 0 and 3 (`-m` and `-M`).
 
@@ -149,7 +149,34 @@ building the distributional space.
 
 Here is a working example:
 
+    catenae cooccurrences -o data/cooccurrences/ 
+                          -c data/corpus/ 
+                          -a data/results/catenae-filtered.txt 
+                          -m 3 
+                          -b 5000 
+                          -f 1 
+                          --include-len-one-items 
+                          --words-filepath data/results/items-freq-summed.gz
 
+The above command will extract cooccurrences between the catenae contained in 
+`catenae-filtered.txt` and items of length one contained in `items-freq-summed.gz` 
+file produced at the `extract` step, as the flag `--include-len-one-items` is present. 
+It will only look for co-occurrences in sentences of length between `3` (`-m`) and 
+`25` (`-M`, default), in batches of `5000` (`-b`).
+
+The script will produce three gzipped files in `data/cooccurrences/`:
+* `catenae-coocc-summed.gz` containing pairs of catenae in alphabetical order and
+  their cooccurrence frequency, tab separated
+  
+* `catenae-freqs-summed.gz` containing catenae in alphabetical order and
+  their frequencies, tab separated
+  
+* `totals-freqs.txt` containing total count of items in the corpus 
+  (used in the next step to compute MI)
+
+| **IMPORTANT**: |
+| -------------- |
+| make sure that the output folder is empty before running the command |
 
 ### `build-dsm`
 
