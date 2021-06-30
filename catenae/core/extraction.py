@@ -345,7 +345,7 @@ def weight_catenae(output_dir, items_filepath, totals_filepath, catenae_filepath
 def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold,
                               min_len_catena, max_len_catena):
 
-    with open(input_file) as fin, open(output_dir+"/catenae-filtered.txt", "w") as fout:
+    with gzip.open(input_file, "rt") as fin, open(output_dir+"/catenae-filtered.txt", "w") as fout:
         print(fin.readline().strip(), file=fout)
         for line in fin:
             line = line.strip().split("\t")

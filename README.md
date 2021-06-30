@@ -21,7 +21,7 @@
 
 ## Usage
 
-    usage: catenae [-h] {extract,weight,filter,cooccurrences}
+    usage: catenae [-h] {extract,weight,filter,cooccurrences,build-dsm}
 
 ### `extract`
 
@@ -132,3 +132,26 @@ and length between 0 and 3 (`-m` and `-M`).
 
 The script extracts co-occurrences of catenae, to be used for 
 building the distributional space.
+
+
+    catenae filter [-o OUTPUT_DIR] 
+                   [-c CORPUS_DIRPATH] 
+                   -a ACCEPTED_CATENAE
+                   [-k TOP_K]
+                   [-m MIN_LEN_SENTENCE]
+                   [-M MAX_LEN_SENTENCE]
+                   [-b SENTENCES_BATCH_SIZE]
+                   [-f FREQUENCY_THRESHOLD]
+                   [--min-len-catena MIN_LEN_CATENA]
+                   [--max-len-catena MAX_LEN_CATENA]
+                   [--include-len-one-items]
+                   --words-filepath WORDS_FILEPATH
+
+Here is a working example:
+
+
+
+### `build-dsm`
+
+The script builds the distributional semantic space, given the 
+files created in the `cooccurrences` step.
