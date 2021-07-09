@@ -182,3 +182,24 @@ The script will produce three gzipped files in `data/cooccurrences/`:
 
 The script builds the distributional semantic space, given the 
 files created in the `cooccurrences` step.
+
+    catenae build-dsm [-o OUTPUT_DIR] 
+                      -c COOCCURRENCES_FILEPATH 
+                      -f FREQUENCIES_FILEPATH
+                      -t TOTAL
+
+Here is a working example:
+
+    catenae build-dsm -o data/output_dsm/ 
+                      -c data/cooccurrences/catenae-coocc-summed.gz 
+                      -f data/cooccurrences/catenae-freqs-summed.gz
+                      -t 68413568
+
+The above command will create a distributional space based on cooccurrences
+extracted during the previous step. In particular, files `catenae-coocc-summed.gz`
+and `catenae-freqs-summed.gz` are those created by the `cooccurrences` command, 
+while the integer to be used as `-t` parameter is to be found in the `totals-freqs.txt`
+file also created during the previous step.
+This step will produce two files:
+* `catenae-ppmi.gz` containing a weighted version of raw cooccurrences
+* `catenae-dsm.gz` containing the implicit vectors reduced to 300 dimensions
