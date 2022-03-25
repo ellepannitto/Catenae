@@ -19,3 +19,10 @@ def PlainCoNLLReader(filepath, min_len=0, max_len=300):
 
         if min_len < len(sentence) < max_len and to_include:
             yield sentence
+
+
+def get_linear(sentence):
+    res = []
+    for el in sentence:
+        res.append(el.split()[1])
+    return " ".join(res)

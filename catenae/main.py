@@ -1,5 +1,6 @@
 import argparse
 from argparse import RawTextHelpFormatter, ArgumentDefaultsHelpFormatter
+from ast import parse
 import logging.config
 import os
 
@@ -7,6 +8,7 @@ from catenae.utils import config_utils as cutils
 from catenae.core import extraction as extraction
 from catenae.core import statistics as stats
 from catenae.core import dsm as dsm
+from catenae.core import corpus as corpus
 
 config_dict = cutils.load(os.path.join(os.path.dirname(__file__), 'logging_utils', 'logging.yml'))
 logging.config.dictConfig(config_dict)
@@ -22,26 +24,52 @@ def _compute_pos_stats(args):
     stats.compute_pos_distribution(output_dir, corpus_dir, pos_list)
 
 
-def _compute_tense_stats(args):
+def _compute_morph_stats(args):
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
-    tense_list = args.tense
+    trait = args.trait
+    values_list = args.values
 
-    stats.compute_tense_distribution(output_dir, corpus_dir, tense_list)
+    stats.compute_morph_distribution(output_dir, corpus_dir, trait, values_list)
 
-def _compute_mood_stats(args):
+
+# def _compute_mood_stats(args):
+#     output_dir = args.output_dir
+#     corpus_dir = args.corpus_dirpath
+#     mood_list = args.mood
+#
+#     stats.compute_mood_distribution(output_dir, corpus_dir, mood_list)
+#
+#
+# def _compute_form_stats(args):
+#     output_dir = args.output_dir
+#     corpus_dir = args.corpus_dirpath
+#     form_list = args.form
+#
+#     stats.compute_tense_distribution(output_dir, corpus_dir, form_list)
+
+
+def _compute_verbedges_stats(args):
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
-    mood_list = args.mood
+    edges = args.number_edges
 
-    stats.compute_mood_distribution(output_dir, corpus_dir, mood_list)
+    stats.compute_verbedges_distribution(output_dir, corpus_dir, edges)
 
-def _compute_form_stats(args):
+
+def _compute_sbj_stats(args):
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
-    form_list = args.form
 
-    stats.compute_tense_distribution(output_dir, corpus_dir, form_list)
+    stats.compute_sbj_distribution(output_dir, corpus_dir)
+
+
+def _compute_synrel_stats(args):
+    output_dir = args.output_dir
+    corpus_dir = args.corpus_dirpath
+    synrel_list = args.synrels
+
+    stats.compute_synrel_distribution(output_dir, corpus_dir, synrel_list)
 
 
 def _extract_catenae(args):
@@ -120,58 +148,79 @@ def _build_dsm(args):
     dsm.build(output_dir, cooccurrences_filepath, frequences_filepath, TOT)
 
 
+def _sample_input(args):
+    output_dir = args.output_dir
+    input_dir = args.corpus_dirpath
+    size = args.size
+    seed = args.seed
+
+    corpus.sample(output_dir, input_dir, size, seed)
+
+
 def main():
     root_parser = argparse.ArgumentParser(prog='catenae', formatter_class=RawTextHelpFormatter)
     subparsers = root_parser.add_subparsers(title="actions", dest="actions")
 
     # Compute stats on corpus
     parser_pos_stats = subparsers.add_parser('pos-stats',
-                                          description='compute list of stats for a corpus',
-                                          help='compute list of stats for a corpus',
-                                          formatter_class=ArgumentDefaultsHelpFormatter)
+                                             description='compute list of stats for a corpus',
+                                             help='compute list of stats for a corpus',
+                                             formatter_class=ArgumentDefaultsHelpFormatter)
     parser_pos_stats.add_argument("-o", "--output-dir", default="data/stats/",
-                              help="path to output dir")
+                                  help="path to output dir")
     parser_pos_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
-                                help="path to corpus directory")
+                                  help="path to corpus directory")
     parser_pos_stats.add_argument("-p", "--pos", required=True, nargs="+",
-                              help="Universal Part of Speech tag")
+                                  help="Universal Part of Speech tag")
     parser_pos_stats.set_defaults(func=_compute_pos_stats)
 
-    parser_tense_stats = subparsers.add_parser('tense-stats',
-                                          description='compute list of stats for a corpus',
-                                          help='compute list of stats for a corpus',
-                                          formatter_class=ArgumentDefaultsHelpFormatter)
-    parser_tense_stats.add_argument("-o", "--output-dir", default="data/stats/",
-                              help="path to output dir")
-    parser_tense_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
-                                help="path to corpus directory")
-    parser_tense_stats.add_argument("-t", "--tense", required=True, nargs="+",
-                              help="Universal Part of Speech tense value")
-    parser_tense_stats.set_defaults(func=_compute_tense_stats)
+    parser_morph_stats = subparsers.add_parser('morph-stats',
+                                               description='compute list of stats for a corpus',
+                                               help='compute list of stats for a corpus',
+                                               formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_morph_stats.add_argument("-o", "--output-dir", default="data/stats/",
+                                    help="path to output dir")
+    parser_morph_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
+                                    help="path to corpus directory")
+    parser_morph_stats.add_argument("-t", "--trait", required=True,
+                                    help="Morphological trait name")
+    parser_morph_stats.add_argument("-v", "--values", required=True, nargs="+",
+                                    help="Morphological trait values")
+    parser_morph_stats.set_defaults(func=_compute_morph_stats)
 
-    parser_mood_stats = subparsers.add_parser('mood-stats',
-                                          description='compute list of stats for a corpus',
-                                          help='compute list of stats for a corpus',
-                                          formatter_class=ArgumentDefaultsHelpFormatter)
-    parser_mood_stats.add_argument("-o", "--output-dir", default="data/stats/",
-                              help="path to output dir")
-    parser_mood_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
-                                help="path to corpus directory")
-    parser_mood_stats.add_argument("-m", "--mood", required=True, nargs="+",
-                              help="Universal Part of Speech mood value")
-    parser_mood_stats.set_defaults(func=_compute_mood_stats)
+    parser_verbedges_stats = subparsers.add_parser('verbedges-stats',
+                                                   description='compute list of stats for a corpus',
+                                                   help='compute list of stats for a corpus',
+                                                   formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_verbedges_stats.add_argument("-o", "--output-dir", default="data/stats/",
+                                        help="path to output dir")
+    parser_verbedges_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
+                                        help="path to corpus directory")
+    parser_verbedges_stats.add_argument("-n", "--number-edges", required=True, type=int,
+                                        help="Number of edges for verb")
+    parser_verbedges_stats.set_defaults(func=_compute_verbedges_stats)
 
-    parser_form_stats = subparsers.add_parser('verbform-stats',
-                                          description='compute list of stats for a corpus',
-                                          help='compute list of stats for a corpus',
-                                          formatter_class=ArgumentDefaultsHelpFormatter)
-    parser_form_stats.add_argument("-o", "--output-dir", default="data/stats/",
-                              help="path to output dir")
-    parser_form_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
-                                help="path to corpus directory")
-    parser_form_stats.add_argument("-f", "--form", required=True, nargs="+",
-                              help="Universal Part of Speech VerbForm value")
-    parser_form_stats.set_defaults(func=_compute_form_stats)
+    parser_sbj_stats = subparsers.add_parser('subj-stats',
+                                             description='compute list of stats for a corpus',
+                                             help='compute list of stats for a corpus',
+                                             formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_sbj_stats.add_argument("-o", "--output-dir", default="data/stats/",
+                                  help="path to output dir")
+    parser_sbj_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
+                                  help="path to corpus directory")
+    parser_sbj_stats.set_defaults(func=_compute_sbj_stats)
+
+    parser_synrel_stats = subparsers.add_parser('synrel-stats',
+                                                description='compute list of stats for a corpus',
+                                                help='compute list of stats for a corpus',
+                                                formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_synrel_stats.add_argument("-o", "--output-dir", default="data/stats/",
+                                     help="path to output dir")
+    parser_synrel_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
+                                     help="path to corpus directory")
+    parser_synrel_stats.add_argument("-r", "--synrels", required=True, nargs="+",
+                                     help="Universal Syntactic Relation tag")
+    parser_synrel_stats.set_defaults(func=_compute_synrel_stats)
 
     # Extraction of catenae
     parser_extract = subparsers.add_parser('extract',
@@ -217,7 +266,7 @@ def main():
                                           help="filter weighted list",
                                           formatter_class=ArgumentDefaultsHelpFormatter)
     parser_filter.add_argument("-o", "--output-dir", default="data/results/",
-                              help="path to output dir")
+                               help="path to output dir")
     parser_filter.add_argument("-i", "--input-filepath", required=True,
                                help="input filepath containing weighted list of catenae")
     parser_filter.add_argument('-f', "--min-freq", type=int, default=0,
@@ -273,13 +322,26 @@ def main():
     parser_dsm.add_argument("-t", "--total", type=int, required=True)
     parser_dsm.set_defaults(func=_build_dsm)
 
-    # Extract pairs of catenae at different abstraction levels
-    parser_pairs = subparsers.add_parser("pairs",
-                                         description="extract pairs of catenae",
-                                         help="extract pairs of catenae",
-                                         formatter_class=ArgumentDefaultsHelpFormatter)
-    
+    # Sample input of determinate size based on number of words
+    parser_sample = subparsers.add_parser("sample-input",
+                                          description="sample input of set size",
+                                          help="sample input of set size",
+                                          formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_sample.add_argument("-o", "--output-dir", default="data/input_sampled/",
+                               help="path to output dir, default is data/input_sampled/")
+    parser_sample.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
+                               help="path to corpus directory")
+    parser_sample.add_argument("-s", "--size", type=int, required=True,
+                               help="number of words to include in the sample")
+    parser_sample.add_argument("--seed", type=int, default=42)
+    parser_sample.set_defaults(func=_sample_input)
 
+    # # Extract pairs of catenae at different abstraction levels
+    # parser_pairs = subparsers.add_parser("pairs",
+    #                                      description="extract pairs of catenae",
+    #                                      help="extract pairs of catenae",
+    #                                      formatter_class=ArgumentDefaultsHelpFormatter)
+    #
     args = root_parser.parse_args()
     if "func" not in args:
         root_parser.print_usage()
