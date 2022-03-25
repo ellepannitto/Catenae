@@ -204,7 +204,7 @@ This step will produce two files:
 * `catenae-ppmi.gz` containing a weighted version of raw cooccurrences
 * `catenae-dsm.gz` containing the implicit vectors reduced to 300 dimensions
 
-## sample-input
+## `sample-input`
 
 The script samples a `train`, `development` and `test` set from a set of input files.
 
