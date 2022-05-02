@@ -1,6 +1,5 @@
 import argparse
 from argparse import RawTextHelpFormatter, ArgumentDefaultsHelpFormatter
-from ast import parse
 import logging.config
 import os
 
