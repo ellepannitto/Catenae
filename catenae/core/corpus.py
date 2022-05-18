@@ -120,3 +120,4 @@ def parse(output_dir, input_dir, model_path):
                 sys.exit(1)
 
             print(processed, file=fout)
+            break
