@@ -104,7 +104,7 @@ def print_to_file(sentences_idxs, files, output_path, str):
 def parse(output_dir, input_dir, model_path):
     model = udpipe.Model.load(model_path)
 
-    pipeline = udpipe.Pipeline(model, "horizontal", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
+    pipeline = udpipe.Pipeline(model, "horizontal", udpipe.Pipeline.DEFAULT, udpipe.Pipeline.DEFAULT, "conllu")
     error = udpipe.ProcessingError()
 
     # Read whole input
@@ -118,5 +118,5 @@ def parse(output_dir, input_dir, model_path):
                 logger.info("An error occurred when running run_udpipe: ")
                 logger.info(error.message)
                 sys.exit(1)
-                
+
             print(processed, file=fout)
