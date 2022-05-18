@@ -1,6 +1,6 @@
 import itertools
 
-from catenae.FileMerger.filesmerger import utils as fmergerutils
+from FileMerger.filesmerger import utils as fmergerutils
 
 def grouper(iterable, n, fillvalue=None):
     """Collect data into fixed-length chunks or blocks"
