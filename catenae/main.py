@@ -1,5 +1,7 @@
 import argparse
 from argparse import RawTextHelpFormatter, ArgumentDefaultsHelpFormatter
+from ast import parse
+from email import parser
 import logging.config
 import os
 
@@ -154,6 +156,14 @@ def _sample_input(args):
     seed = args.seed
 
     corpus.sample(output_dir, input_dir, size, seed)
+
+
+def _udparse(args):
+    output_dir = args.output_dir
+    input_dir = args.input_dir
+    model_path = args.model
+
+    corpus.parse(output_dir, input_dir, model_path)
 
 
 def main():
@@ -334,6 +344,18 @@ def main():
                                help="number of words to include in the sample")
     parser_sample.add_argument("--seed", type=int, default=42)
     parser_sample.set_defaults(func=_sample_input)
+
+    parser_udparse = subparsers.add_parser("udparse",
+                                           description="parse data with UD format",
+                                           help="parse data with UD format",
+                                           formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_udparse.add_argument("-o", "--output-dir", default="data/output_parsed/",
+                               help="path to output dir, default is data/output_parsed/")
+    parser_udparse.add_argument("-i", "--input-dir", default="data/input/",
+                               help="path to output dir, default is data/input/")
+    parser_udparse.add_argument("-m", "--model", required=True,
+                                help="path to file containing model for udpipe lib")    
+    parser_udparse.set_defaults(func=_udparse)                       
 
     # # Extract pairs of catenae at different abstraction levels
     # parser_pairs = subparsers.add_parser("pairs",

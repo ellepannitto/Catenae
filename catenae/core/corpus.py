@@ -1,6 +1,10 @@
+import os
+import sys
 import logging
 import glob
 import random
+
+import ufal.udpipe as udpipe
 
 from catenae.utils import corpus_utils as cutils
 
@@ -95,3 +99,24 @@ def print_to_file(sentences_idxs, files, output_path, str):
 
                     if index == len(sentences_idxs):
                         break
+
+
+def parse(output_dir, input_dir, model_path):
+    model = udpipe.Model.load(model_path)
+
+    pipeline = udpipe.Pipeline(model, "horizontal", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
+    error = udpipe.ProcessingError()
+
+    # Read whole input
+    for filename in os.listdir(input_dir):
+        with open(filename) as fin, open(output_dir+"/prova", "w") as fout:
+            text = ''.join(fin.readlines())
+        
+            # Process data
+            processed = pipeline.process(text, error)
+            if error.occurred():
+                logger.info("An error occurred when running run_udpipe: ")
+                logger.info(error.message)
+                sys.exit(1)
+                
+            print(processed, file=fout)
