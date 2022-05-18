@@ -109,7 +109,7 @@ def parse(output_dir, input_dir, model_path):
 
     # Read whole input
     for filename in os.listdir(input_dir):
-        with open(filename) as fin, open(output_dir+"/prova", "w") as fout:
+        with open(input_dir+filename) as fin, open(output_dir+"/prova", "w") as fout:
             text = ''.join(fin.readlines())
         
             # Process data
