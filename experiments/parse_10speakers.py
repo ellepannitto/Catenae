@@ -3,9 +3,9 @@ import catenae
 
 from multiprocessing import Pool
 
-input_dir_basename = sys.argv[1]
-output_dir_basename = sys.argv[2]
-model_path = sys.argv[1]
+output_dir_basename = sys.argv[1]
+input_dir_basename = sys.argv[2]
+model_path = sys.argv[3]
 
 
 
