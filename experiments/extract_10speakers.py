@@ -8,7 +8,7 @@ input_dir_basename = sys.argv[2]
 
 min_len_sentence = 3
 max_len_sentence = 25
-sentences_batch_size = 350
+sentences_batch_size = 5000
 min_freq = 3
 min_len_catena = 0
 max_len_catena = 4
