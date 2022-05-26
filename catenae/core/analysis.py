@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 
 def correlate(output_dir, filenames_list, topk):
     
+    print(filenames_list)
+    input()
+
     catdict = {}
 
     catdict_lists = {}
