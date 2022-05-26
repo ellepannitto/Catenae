@@ -8,12 +8,11 @@ logger = logging.getLogger(__name__)
 
 def correlate(output_dir, filenames_list, topk):
     
-    print("HELLO")
-    print(filenames_list)
-    input()
+    #print("HELLO")
+    #print(filenames_list)
+    #input()
 
     catdict = {}
-
     catdict_lists = {}
 
     for filename in filenames_list:
@@ -21,7 +20,10 @@ def correlate(output_dir, filenames_list, topk):
             catdict[filename] = {}
 
             first_mi = 100
+            line = "FIRST DUMB LINE"
+
             while first_mi > 20:
+                print(line)
                 line = fin.readline()
                 linesplit = line.strip().split("\t")
                 catena = linesplit[0].lower()
