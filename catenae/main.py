@@ -10,6 +10,7 @@ from catenae.core import extraction as extraction
 from catenae.core import statistics as stats
 from catenae.core import dsm as dsm
 from catenae.core import corpus as corpus
+from catenae.core import analysis as analysis
 
 config_dict = cutils.load(os.path.join(os.path.dirname(__file__), 'logging_utils', 'logging.yml'))
 logging.config.dictConfig(config_dict)
@@ -164,6 +165,14 @@ def _udparse(args):
     model_path = args.model
 
     corpus.parse(output_dir, input_dir, model_path)
+
+
+def _correlate(args):
+    output_dir = args.output_dir
+    filenames_list = args.files_list
+    topk = args.top_k
+
+    analysis.correlate(output_dir, filenames_list, topk)
 
 
 def main():
@@ -356,6 +365,18 @@ def main():
     parser_udparse.add_argument("-m", "--model", required=True,
                                 help="path to file containing model for udpipe lib")    
     parser_udparse.set_defaults(func=_udparse)                       
+
+    parser_correlate = subparsers.add_parser("spearman",
+                                            description="compute spearman correlation between lists of catenae",
+                                            help="compute spearman correlation between lists of catenae",
+                                            formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_correlate.add_argument("-o", "--output-dir", default="data/output_correlations/",
+                                  help="path to output dir, default is data/output_correlations/")
+    parser_correlate.add_argument("-k", "--top-k", type=int, default=10000,
+                                  help="number of structures to correlate")
+    parser_correlate.add_argument("-l", "--files-list", required=True, nargs="+",
+                                  help="list of filenames")
+    parser_correlate.set_defaults(func=_correlate)
 
     # # Extract pairs of catenae at different abstraction levels
     # parser_pairs = subparsers.add_parser("pairs",
