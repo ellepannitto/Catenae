@@ -1,5 +1,6 @@
 import logging
 import collections
+import gzip
 
 from scipy.stats.mstats import spearmanr
 
@@ -16,7 +17,7 @@ def correlate(output_dir, filenames_list, topk):
     catdict_lists = {}
 
     for filename in filenames_list:
-        with open(filename) as fin:
+        with gzip.open(filename, "rt") as fin:
             catdict[filename] = {}
 
             first_mi = 100
