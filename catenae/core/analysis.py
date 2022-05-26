@@ -21,7 +21,7 @@ def correlate(output_dir, filenames_list, topk):
             catdict[filename] = {}
 
             first_mi = 100
-            line = "FIRST DUMB LINE"
+            line = fin.readline()
 
             while first_mi > 20:
                 print(line)
