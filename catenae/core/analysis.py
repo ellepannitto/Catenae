@@ -23,14 +23,14 @@ def correlate(output_dir, filenames_list, topk):
             first_mi = 100
             line = fin.readline()
 
-            while first_mi > 20:
-                print(line)
+            while first_mi > 0:
+                #print(line)
                 line = fin.readline()
                 linesplit = line.strip().split("\t")
                 catena = linesplit[0].lower()
                 freq = float(linesplit[1])
                 mi = float(linesplit[2])
-                if freq > 200:
+                if freq > 0:
                     catdict[filename][catena] = mi
                     first_mi = mi
 
