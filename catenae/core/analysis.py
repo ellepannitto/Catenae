@@ -54,7 +54,7 @@ def correlate(output_dir, filenames_list, topk):
 
             dims = catdict_lists[filename][:topk]
             print(filename, file=fout)
-            print("\t".join(dims), file=fout)
+            print("\t".join([x[0] for x in dims]), file=fout)
 
             for filename2 in catdict:
                 vectors[filename] = []
