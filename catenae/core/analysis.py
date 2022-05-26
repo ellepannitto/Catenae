@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 def correlate(output_dir, filenames_list, topk):
     
+    print("HELLO")
     print(filenames_list)
     input()
 
