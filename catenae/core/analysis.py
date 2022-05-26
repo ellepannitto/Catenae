@@ -30,7 +30,7 @@ def correlate(output_dir, filenames_list, topk):
                 catena = linesplit[0].lower()
                 freq = float(linesplit[1])
                 mi = float(linesplit[2])
-                if freq > 0:
+                if freq > 20:
                     catdict[filename][catena] = mi
                     first_mi = mi
 
