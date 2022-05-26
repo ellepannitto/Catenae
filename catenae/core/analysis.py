@@ -45,35 +45,38 @@ def correlate(output_dir, filenames_list, topk):
     zeros = {}
     vectors = {}
 
-    for filename in catdict:
-
-        stats[filename] = collections.defaultdict(lambda: -1.0)
-        p_values[filename] = collections.defaultdict(lambda: -1.0)
-        keys_list.add(filename)
-
-        dims = catdict_lists[filename][:topk]
-
-        for filename2 in catdict:
-            vectors[filename] = []
-            vectors[filename2] = []
-            zeros[filename2] = 0
-
-            for catena, mi in dims:
-
-                vectors[filename].append(mi)
-
-                if catena in catdict[filename2]:
-                    vectors[filename2].append(catdict[filename2][catena])
-                else:
-                    vectors[filename2].append(0)
-                    zeros[filename2] += 1
-
-            s, p_s = spearmanr(vectors[filename], vectors[filename2])
-            stats[filename][filename2] = s
-            p_values[filename][filename2] = p_s
-
-
     with open(output_dir+"/spearmanr.txt", "w") as fout:
+        for filename in catdict:
+
+            stats[filename] = collections.defaultdict(lambda: -1.0)
+            p_values[filename] = collections.defaultdict(lambda: -1.0)
+            keys_list.add(filename)
+
+            dims = catdict_lists[filename][:topk]
+            print(filename, file=fout)
+            print("\t".join(dims), file=fout)
+
+            for filename2 in catdict:
+                vectors[filename] = []
+                vectors[filename2] = []
+                zeros[filename2] = 0
+
+                for catena, mi in dims:
+
+                    vectors[filename].append(mi)
+
+                    if catena in catdict[filename2]:
+                        vectors[filename2].append(catdict[filename2][catena])
+                    else:
+                        vectors[filename2].append(0)
+                        zeros[filename2] += 1
+
+                s, p_s = spearmanr(vectors[filename], vectors[filename2])
+                stats[filename][filename2] = s
+                p_values[filename][filename2] = p_s
+
+
+    
         for filename in stats:
             for filename2 in stats[filename]:
                 s, p_s = stats[filename][filename2], p_values[filename][filename2]
