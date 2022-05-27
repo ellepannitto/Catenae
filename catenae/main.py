@@ -171,8 +171,10 @@ def _correlate(args):
     output_dir = args.output_dir
     filenames_list = args.files_list
     topk = args.top_k
+    mi = args.mi_threshold
+    frequency = args.frequency_threshold
 
-    analysis.correlate(output_dir, filenames_list, topk)
+    analysis.correlate(output_dir, filenames_list, topk, mi, frequency)
 
 
 def main():
@@ -374,6 +376,10 @@ def main():
                                   help="path to output dir, default is data/output_correlations/")
     parser_correlate.add_argument("-k", "--top-k", type=int, default=10000,
                                   help="number of structures to correlate")
+    parser_correlate.add_argument("--mi-threshold", type=int, default=0,
+                                  help="theshold on mutual information")
+    parser_correlate.add_argument("--frequency-threshold", type=int, default=20,
+                                  help="threshold on frequency")
     parser_correlate.add_argument("-l", "--files-list", required=True, nargs="+",
                                   help="list of filenames")
     parser_correlate.set_defaults(func=_correlate)

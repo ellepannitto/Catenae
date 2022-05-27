@@ -7,7 +7,7 @@ from scipy.stats.mstats import spearmanr
 logger = logging.getLogger(__name__)
 
 
-def correlate(output_dir, filenames_list, topk):
+def correlate(output_dir, filenames_list, topk, mi_threshold, fr_threshold):
     
     #print("HELLO")
     #print(filenames_list)
@@ -23,20 +23,26 @@ def correlate(output_dir, filenames_list, topk):
             first_mi = 100
             line = fin.readline()
 
-            while first_mi > 0:
+            while first_mi > mi_threshold:
                 #print(line)
                 line = fin.readline()
                 linesplit = line.strip().split("\t")
                 catena = linesplit[0].lower()
                 freq = float(linesplit[1])
                 mi = float(linesplit[2])
-                if freq > 20:
+                if freq > fr_threshold:
                     catdict[filename][catena] = mi
                     first_mi = mi
 
     for filename in catdict:
         catdict_lists[filename] = list(sorted(catdict[filename].items(), key=lambda x: -x[1]))
 
+    for filename in catdict_lists:
+        basename = filename.replace("/", "_")
+
+        with gzip.open(output_dir+"/{}.TOP{}".format(basename, topk), "wt") as fout:
+            for catena, mi in catdict_lists[filename][:topk]:
+                print("{}\t{}".format(catena, mi), file=fout)
 
     # SPEARMAN
     stats = {}
@@ -45,7 +51,7 @@ def correlate(output_dir, filenames_list, topk):
     zeros = {}
     vectors = {}
 
-    with open(output_dir+"/spearmanr.txt", "w") as fout:
+    with open(output_dir+"/spearmanr-TOP{}.txt".format(topk), "w") as fout:
         for filename in catdict:
 
             stats[filename] = collections.defaultdict(lambda: -1.0)
@@ -74,8 +80,6 @@ def correlate(output_dir, filenames_list, topk):
                 s, p_s = spearmanr(vectors[filename], vectors[filename2])
                 stats[filename][filename2] = s
                 p_values[filename][filename2] = p_s
-
-
     
         for filename in stats:
             for filename2 in stats[filename]:
