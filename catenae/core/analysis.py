@@ -22,17 +22,18 @@ def correlate(output_dir, filenames_list, topk, mi_threshold, fr_threshold):
 
             first_mi = 100
             line = fin.readline()
-
-            while first_mi > mi_threshold:
+            
+            for line in fin:
+            #while first_mi > mi_threshold:
                 #print(line)
-                line = fin.readline()
+#                line = fin.readline()
                 linesplit = line.strip().split("\t")
                 catena = linesplit[0].lower()
                 freq = float(linesplit[1])
                 mi = float(linesplit[2])
                 if freq > fr_threshold:
                     catdict[filename][catena] = mi
-                    first_mi = mi
+ #                   first_mi = mi
 
     for filename in catdict:
         catdict_lists[filename] = list(sorted(catdict[filename].items(), key=lambda x: -x[1]))
