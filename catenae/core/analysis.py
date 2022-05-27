@@ -62,8 +62,8 @@ def correlate(output_dir, filenames_list, topk, mi_threshold, fr_threshold):
             keys_list.add(filename)
 
             dims = catdict_lists[filename][:topk]
-            print(filename, file=fout)
-            print("\t".join([x[0] for x in dims]), file=fout)
+            #print(filename, file=fout)
+            #print("\t".join([x[0] for x in dims]), file=fout)
 
             for filename2 in catdict:
                 vectors[filename] = []
