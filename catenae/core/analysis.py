@@ -40,6 +40,8 @@ def correlate(output_dir, filenames_list, topk, mi_threshold, fr_threshold):
     for filename in catdict_lists:
         basename = filename.replace("/", "_")
 
+        logging.info("Catenae in {}: {}".format(filename, catdict_lists[filename]))
+
         with gzip.open(output_dir+"/{}.TOP{}".format(basename, topk), "wt") as fout:
             for catena, mi in catdict_lists[filename][:topk]:
                 print("{}\t{}".format(catena, mi), file=fout)
