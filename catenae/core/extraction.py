@@ -332,14 +332,13 @@ def weight_catenae(output_dir, items_filepath, totals_filepath, catenae_filepath
             else:
                 mi = compute_mi(line, freqdict_totals, freqdict_items)
 
+            #print("{}\t{}\t{}".format("|".join(catena), freq, mi), file=fout)
+            catenae_list.append((catena, freq, mi))
+
+        sorted_catenae = sorted(catenae_list, key=lambda x: (-x[2], x[0]))
+
+        for catena, freq, mi in sorted_catenae:
             print("{}\t{}\t{}".format("|".join(catena), freq, mi), file=fout)
-            # catenae_list.append((catena, freq, mi))
-
-        # sorted_catenae = sorted(catenae_list, key=lambda x: (-x[2], x[0]))
-
-
-        # for catena, freq, mi in sorted_catenae:
-        #     print("{}\t{}\t{}".format("|".join(catena), freq, mi), file=fout)
 
 
 def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold,
