@@ -335,6 +335,7 @@ def weight_catenae(output_dir, items_filepath, totals_filepath, catenae_filepath
             #print("{}\t{}\t{}".format("|".join(catena), freq, mi), file=fout)
             catenae_list.append((catena, freq, mi))
 
+        logger.info("sorting catenae based on mi...")
         sorted_catenae = sorted(catenae_list, key=lambda x: (-x[2], x[0]))
 
         for catena, freq, mi in sorted_catenae:
