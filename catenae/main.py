@@ -384,6 +384,13 @@ def main():
                                   help="list of filenames")
     parser_correlate.set_defaults(func=_correlate)
 
+    parser_DSM = subparsers.add_parser("build-dsm",
+                                       description="build distributional vector space model for catenae",
+                                       help="build distributional vector space model for catenae",
+                                       formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_DSM.add_argument("-o", "--output-dir", default="data/DSM/",
+                            help="path to output dir, default is data/DSM/")
+
     # # Extract pairs of catenae at different abstraction levels
     # parser_pairs = subparsers.add_parser("pairs",
     #                                      description="extract pairs of catenae",
