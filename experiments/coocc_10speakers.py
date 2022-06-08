@@ -11,7 +11,7 @@ for i in range(1, 11):
     n = str(i).zfill(2)
 
     output_dir = output_dir_basename+"{}/".format(n)
-    corpus_dir = corpus_dir+"{}/".format(n)
+    corpus_dir = corpus_dir_basename+"{}/".format(n)
 
     accepted_catenae_filepath = weighted_dir_basename+"{}/catenae-filtered.txt".format(n)
 
