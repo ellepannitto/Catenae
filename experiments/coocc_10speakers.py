@@ -31,10 +31,7 @@ for i in range(1, 11):
     words_filepath = weighted_dir_basename+"{}/items-freq-summed.gz".format(n)
 
 
-
-
-
-extraction.extract_coccurrences(output_dir, corpus_dir, accepted_catenae_filepath, top_k,
+    catenae.core.extraction.extract_coccurrences(output_dir, corpus_dir, accepted_catenae_filepath, top_k,
                                     min_len_sentence, max_len_sentence, sentences_batch_size,
                                     min_freq, min_len_catena, max_len_catena,
                                     include_words, words_filepath)
