@@ -337,9 +337,12 @@ def main():
                                        formatter_class=ArgumentDefaultsHelpFormatter)
     parser_dsm.add_argument("-o", "--output-dir", default="data/results/",
                             help="path to output dir, default is data/results/")
-    parser_dsm.add_argument("-c", "--cooccurrences-filepath", required=True)
-    parser_dsm.add_argument("-f", "--frequences-filepath", required=True)
-    parser_dsm.add_argument("-t", "--total", type=int, required=True)
+    parser_dsm.add_argument("-c", "--cooccurrences-filepath", 
+                            help="path to cooccurrences file", required=True)
+    parser_dsm.add_argument("-f", "--frequences-filepath", 
+                            help="path to frequencies file", required=True)
+    parser_dsm.add_argument("-t", "--total", type=int, 
+                            help="sum of frequencies", required=True)
     parser_dsm.set_defaults(func=_build_dsm)
 
     # Sample input of determinate size based on number of words
@@ -383,13 +386,6 @@ def main():
     parser_correlate.add_argument("-l", "--files-list", required=True, nargs="+",
                                   help="list of filenames")
     parser_correlate.set_defaults(func=_correlate)
-
-    parser_DSM = subparsers.add_parser("build-dsm",
-                                       description="build distributional vector space model for catenae",
-                                       help="build distributional vector space model for catenae",
-                                       formatter_class=ArgumentDefaultsHelpFormatter)
-    parser_DSM.add_argument("-o", "--output-dir", default="data/DSM/",
-                            help="path to output dir, default is data/DSM/")
 
     # # Extract pairs of catenae at different abstraction levels
     # parser_pairs = subparsers.add_parser("pairs",
