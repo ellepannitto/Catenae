@@ -17,7 +17,7 @@ for i in range(1, 11):
     freqs_filepath = input_dir+"/totals-freqs.txt"
 
     with open(freqs_filepath) as fin:
-        line = fine.readline().strip().split("\t")
+        line = fin.readline().strip().split("\t")
         TOT = int(line[1])
 
     catenae.core.dsm.build(output_dir, cooccurrences_filepath, frequences_filepath, TOT)
