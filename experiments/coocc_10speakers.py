@@ -32,10 +32,10 @@ with Pool(3) as p:
     words_filepath_iter = [weighted_dir_basename+"{}/items-freq-summed.gz".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
 
 
-    catenae.core.extraction.extract_coccurrences(output_dir_iter, corpus_dir_iter, accepted_catenae_filepath_iter, top_k_iter,
+    p.starmap(catenae.core.extraction.extract_coccurrences, zip(output_dir_iter, corpus_dir_iter, accepted_catenae_filepath_iter, top_k_iter,
                                     min_len_sentence_iter, max_len_sentence_iter, sentences_batch_size_iter,
                                     min_freq_iter, min_len_catena_iter, max_len_catena_iter,
-                                    include_words_iter, words_filepath_iter)
+                                    include_words_iter, words_filepath_iter))
 
 # for i in range(1, 11):
 #     n = str(i).zfill(2)
