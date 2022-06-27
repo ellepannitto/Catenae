@@ -8,7 +8,7 @@ output_dir_basename = sys.argv[1]
 input_dir_basename = sys.argv[2]
 
 
-with Pool(3) as p:
+with Pool(2) as p:
 
     output_dir_iter = [output_dir_basename+"{}/".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
     input_dir_iter = [input_dir_basename+"{}/".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
