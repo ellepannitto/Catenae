@@ -8,6 +8,8 @@ import gzip
 import math
 import tqdm
 
+from typing import List
+
 from catenae.utils import files_utils as futils
 from catenae.utils import data_utils as dutils
 from catenae.utils import corpus_utils as cutils
@@ -91,14 +93,13 @@ def process_sentence(sentence, freqdict, catdict, totalsdict,
 
                 temp = [(0, 1, 2)] * len(catena)
                 X = list(itertools.product(*temp))
+                
                 for c in X:
-
                     cat = []
                     for i, el in enumerate(c):
                         cat.append(tokensandpostags[el][i])
                     cat = tuple(cat)
 
-                    # if len(cat) > 1:
                     catdict["|".join(cat)] += 1
                     totalsdict[(len(cat))] += 1
 
@@ -364,3 +365,38 @@ def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold
 
             if len(catena) == 1:
                 print("{}\t{}\t{}".format("|".join(catena), freq, weight), file=fout_words)
+
+def extract_sentences(output_dir: str, input_dir: str, catenae_list: List[str]) -> None:
+    """_summary_
+
+    Args:
+        output_dir (str): _description_
+        input_file (str): _description_
+        catenae_list (list[str]): _description_
+    """
+    print(catenae_list)
+    input_files = glob.glob(input_dir+"/*")
+    for input_file in input_files:
+        for sentence_no, sentence in enumerate(cutils.PlainCoNLLReader(input_file, 
+                                                                       min_len=1, 
+                                                                       max_len=25)):
+            if sentence:
+                # print(sentence)
+
+                if not sentence_no % 100:
+                    logger.info("{} - {}".format(sentence_no, len(sentence)))
+                
+                freqdict = collections.defaultdict(int)
+                catdict = collections.defaultdict(int)
+                totalsdict = collections.defaultdict(int)    
+
+                process_sentence(sentence, freqdict, catdict, totalsdict,
+                                    min_len_catena=0, max_len_catena=5)
+
+                catenae = catdict.keys()
+                
+                if any(x in catenae for x in catenae_list):
+                    print("found matching sentence")
+                    print(sentence)
+                    print(catenae)
+                    input()

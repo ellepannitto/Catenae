@@ -1,16 +1,19 @@
+"""_summary_
+"""
+    
 import argparse
 from argparse import RawTextHelpFormatter, ArgumentDefaultsHelpFormatter
-from ast import parse
-from email import parser
 import logging.config
 import os
+import sys
 
 from catenae.utils import config_utils as cutils
-from catenae.core import extraction as extraction
 from catenae.core import statistics as stats
-from catenae.core import dsm as dsm
-from catenae.core import corpus as corpus
-from catenae.core import analysis as analysis
+
+from catenae.core import extraction
+from catenae.core import dsm
+from catenae.core import corpus
+from catenae.core import analysis
 
 config_dict = cutils.load(os.path.join(os.path.dirname(__file__), 'logging_utils', 'logging.yml'))
 logging.config.dictConfig(config_dict)
@@ -18,7 +21,13 @@ logging.config.dictConfig(config_dict)
 logger = logging.getLogger(__name__)
 
 
-def _compute_pos_stats(args):
+def _compute_pos_stats(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
     pos_list = args.pos
@@ -26,7 +35,13 @@ def _compute_pos_stats(args):
     stats.compute_pos_distribution(output_dir, corpus_dir, pos_list)
 
 
-def _compute_morph_stats(args):
+def _compute_morph_stats(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
     trait = args.trait
@@ -51,7 +66,13 @@ def _compute_morph_stats(args):
 #     stats.compute_tense_distribution(output_dir, corpus_dir, form_list)
 
 
-def _compute_verbedges_stats(args):
+def _compute_verbedges_stats(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
     edges = args.number_edges
@@ -59,14 +80,26 @@ def _compute_verbedges_stats(args):
     stats.compute_verbedges_distribution(output_dir, corpus_dir, edges)
 
 
-def _compute_sbj_stats(args):
+def _compute_sbj_stats(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
 
     stats.compute_sbj_distribution(output_dir, corpus_dir)
 
 
-def _compute_synrel_stats(args):
+def _compute_synrel_stats(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
     synrel_list = args.synrels
@@ -74,7 +107,13 @@ def _compute_synrel_stats(args):
     stats.compute_synrel_distribution(output_dir, corpus_dir, synrel_list)
 
 
-def _extract_catenae(args):
+def _extract_catenae(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
 
@@ -91,7 +130,13 @@ def _extract_catenae(args):
                                min_freq, min_len_catena, max_len_catena)
 
 
-def _weight_catenae(args):
+def _weight_catenae(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
 
     items_filepath = args.items_filepath
@@ -102,7 +147,13 @@ def _weight_catenae(args):
                               items_filepath, totals_filepath, catenae_filepath)
 
 
-def _filter_catenae(args):
+def _filter_catenae(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
 
     input_file = args.input_filepath
@@ -115,7 +166,12 @@ def _filter_catenae(args):
                               min_len_catena, max_len_catena)
 
 
-def _extract_cooccurrences(args):
+def _extract_cooccurrences(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
     output_dir = args.output_dir
     corpus_dir = args.corpus_dirpath
     accepted_catenae_filepath = args.accepted_catenae
@@ -138,7 +194,12 @@ def _extract_cooccurrences(args):
                                     include_words, words_filepath)
 
 
-def _build_dsm(args):
+def _build_dsm(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
 
     # TODO: add parameter for dimensions
 
@@ -150,7 +211,13 @@ def _build_dsm(args):
     dsm.build(output_dir, cooccurrences_filepath, frequences_filepath, TOT)
 
 
-def _sample_input(args):
+def _sample_input(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     input_dir = args.corpus_dirpath
     size = args.size
@@ -159,7 +226,13 @@ def _sample_input(args):
     corpus.sample(output_dir, input_dir, size, seed)
 
 
-def _udparse(args):
+def _udparse(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     input_dir = args.input_dir
     model_path = args.model
@@ -167,7 +240,13 @@ def _udparse(args):
     corpus.parse(output_dir, input_dir, model_path)
 
 
-def _correlate(args):
+def _correlate(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
     output_dir = args.output_dir
     filenames_list = args.files_list
     topk = args.top_k
@@ -177,7 +256,39 @@ def _correlate(args):
     analysis.correlate(output_dir, filenames_list, topk, mi, frequency)
 
 
-def main():
+def _corecatenae(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
+    output_dir = args.output_dir
+    input_filenames_list = args.input_files_list
+    babbling_filenames_list = args.babbling_files_list
+    topk = args.top_k
+
+    analysis.corecatenae(output_dir, input_filenames_list, babbling_filenames_list, topk)
+    
+
+def _extract_sentences(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    
+    output_dir = args.output_dir
+    input_dir = args.input_dir
+    catenae_list = args.catenae_list
+    
+    extraction.extract_sentences(output_dir, input_dir, catenae_list)
+
+
+def main() -> None:
+    """_summary_
+    """
+
     root_parser = argparse.ArgumentParser(prog='catenae', formatter_class=RawTextHelpFormatter)
     subparsers = root_parser.add_subparsers(title="actions", dest="actions")
 
@@ -187,11 +298,11 @@ def main():
                                              help='compute list of stats for a corpus',
                                              formatter_class=ArgumentDefaultsHelpFormatter)
     parser_pos_stats.add_argument("-o", "--output-dir", default="data/stats/",
-                                  help="path to output dir")
+                                 help="path to output dir")                                
     parser_pos_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
-                                  help="path to corpus directory")
+                                 help="path to corpus directory")
     parser_pos_stats.add_argument("-p", "--pos", required=True, nargs="+",
-                                  help="Universal Part of Speech tag")
+                                 help="Universal Part of Speech tag")
     parser_pos_stats.set_defaults(func=_compute_pos_stats)
 
     parser_morph_stats = subparsers.add_parser('morph-stats',
@@ -359,6 +470,7 @@ def main():
     parser_sample.add_argument("--seed", type=int, default=42)
     parser_sample.set_defaults(func=_sample_input)
 
+
     parser_udparse = subparsers.add_parser("udparse",
                                            description="parse data with UD format",
                                            help="parse data with UD format",
@@ -371,21 +483,51 @@ def main():
                                 help="path to file containing model for udpipe lib")    
     parser_udparse.set_defaults(func=_udparse)                       
 
+
     parser_correlate = subparsers.add_parser("spearman",
                                             description="compute spearman correlation between lists of catenae",
                                             help="compute spearman correlation between lists of catenae",
                                             formatter_class=ArgumentDefaultsHelpFormatter)
     parser_correlate.add_argument("-o", "--output-dir", default="data/output_correlations/",
                                   help="path to output dir, default is data/output_correlations/")
-    parser_correlate.add_argument("-k", "--top-k", type=int, default=10000,
+    parser_correlate.add_argument("-k", "--top-k", type=int, default=10_000,
                                   help="number of structures to correlate")
     parser_correlate.add_argument("--mi-threshold", type=int, default=0,
                                   help="theshold on mutual information")
     parser_correlate.add_argument("--frequency-threshold", type=int, default=20,
                                   help="threshold on frequency")
     parser_correlate.add_argument("-l", "--files-list", required=True, nargs="+",
-                                  help="list of filenames")
+                                  help="list of filenames to be used as input")
     parser_correlate.set_defaults(func=_correlate)
+
+
+    parser_corecatenae = subparsers.add_parser("corecatenae",
+                                               description="compute stats about the core catenae for group of speakers",
+                                               help="compute stats about the core catenae for group of speakers",
+                                               formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_corecatenae.add_argument("-o", "--output-dir", default="data/output_corecatenae/",
+                                    help="path to output dir, default is data/output_corecatenae/")
+    parser_corecatenae.add_argument("-i", "--input-files-list", required=True, nargs="+",
+                                    help="list of filenames to be used as input")
+    parser_corecatenae.add_argument("-b", "--babbling-files-list", required=True, nargs="+",
+                                    help="list of filenames produced in the babbling phase to be used as input")
+    parser_corecatenae.add_argument("-k", "--top-k", type=int, default=10_000,
+                                    help="threshold")
+    parser_corecatenae.set_defaults(func=_corecatenae)
+    
+    
+    parser_extractsentences = subparsers.add_parser("extract-sentences",
+                                                    description="extract sentences containing catena",
+                                                    help="extract sentences containing catena",
+                                                    formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_extractsentences.add_argument("-o", "--output-dir", default="data/output_sentences/",
+                                         help="path to output dir, default is data/output_sentences/")
+    parser_extractsentences.add_argument("-i", "--input-dir", required=True,
+                                         help="directory containing parsed files to be used as input")
+    parser_extractsentences.add_argument("-c", "--catenae-list", nargs="+",
+                                         help="list of catenae to look for")
+    parser_extractsentences.set_defaults(func=_extract_sentences)
+
 
     # # Extract pairs of catenae at different abstraction levels
     # parser_pairs = subparsers.add_parser("pairs",
@@ -396,5 +538,5 @@ def main():
     args = root_parser.parse_args()
     if "func" not in args:
         root_parser.print_usage()
-        exit()
+        sys.exit()
     args.func(args)

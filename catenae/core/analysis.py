@@ -1,17 +1,18 @@
+# pylint: disable=unspecified-encoding
 import logging
 import collections
 import gzip
+import tqdm
+
+from typing import List
 
 from scipy.stats.mstats import spearmanr
 
 logger = logging.getLogger(__name__)
 
 
-def correlate(output_dir, filenames_list, topk, mi_threshold, fr_threshold):
-    
-    #print("HELLO")
-    #print(filenames_list)
-    #input()
+def correlate(output_dir: str, filenames_list: List[str], 
+              topk: int, mi_threshold: int, fr_threshold: int) -> None:
 
     catdict = {}
     catdict_lists = {}
@@ -88,3 +89,85 @@ def correlate(output_dir, filenames_list, topk, mi_threshold, fr_threshold):
             for filename2 in stats[filename]:
                 s, p_s = stats[filename][filename2], p_values[filename][filename2]
                 print("{}\t{}\t{}\t{}".format(filename, filename2, s, p_s), file=fout)
+
+
+def corecatenae(output_dir, input_filenames_list, babbling_filenames_list, topk):
+
+    inputs = {}
+    babblings = {}
+    ranks = {}
+
+    for fname in babbling_filenames_list:
+        file_idx = int(fname.split("/")[-2]) -1
+
+        with gzip.open(fname, "rt") as fin:
+            fin.readline()
+
+            i=0
+            
+            for line in tqdm.tqdm(fin):
+                line = line.strip().split("\t")
+
+                catena, _, mi = line
+
+                if not catena in babblings:
+                    babblings[catena] = [None]*len(babbling_filenames_list)
+                    ranks[catena] = [None]*len(babbling_filenames_list)
+
+                babblings[catena][file_idx] = mi
+                ranks[catena][file_idx] = i+1
+
+                i+=1
+                if i>topk:
+                    break
+
+
+    for fname in input_filenames_list:
+        file_idx = int(fname.split("/")[-2]) -1
+
+        with gzip.open(fname, "rt") as fin:
+            fin.readline()
+
+            for line in tqdm.tqdm(fin):
+                line = line.strip().split("\t")
+
+                catena, frequency, _ = line
+
+                if catena in babblings:
+                    if not catena in inputs:
+                        inputs[catena] = [None]*len(input_filenames_list)
+
+                    inputs[catena][file_idx] = frequency
+
+
+    with open(output_dir+"/babblingstats.tsv", "w") as fout:
+        s = "catena\t"
+        l = ["input_freq_"+str(i).zfill(2) for i in range(1,11)]
+        s+= "\t".join(l)+"\t"
+
+        l = ["babbling_mi_"+str(i).zfill(2) for i in range(1,11)]
+        s+= "\t".join(l)+"\t"
+
+        l = ["babbling_rank_"+str(i).zfill(2) for i in range(1,11)]
+        s+= "\t".join(l)
+
+        print(s, file=fout)
+
+        for catena in babblings:
+            lst = [catena]
+
+            for i, freq in enumerate(inputs[catena]):
+                lst.append(str(freq))
+
+            for i, mi in enumerate(babblings[catena]):
+                lst.append(str(mi))
+            
+            for i, rank in enumerate(ranks[catena]):
+                lst.append(str(rank))
+
+            print("\t".join(lst), file=fout)
+            
+            # print("\t".join(str(x) for x in lst))
+            # print(babblings[catena])
+            # print(inputs[catena])
+            # input()
