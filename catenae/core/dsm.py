@@ -5,11 +5,17 @@ import math
 
 import numpy as np
 import scipy as sp
+from scipy.spatial import distance
+from sklearn.metrics import pairwise_distances_chunked
 from scipy.sparse.linalg import svds, eigs
+
+from catenae.utils import data_utils as dutils
 
 from FileMerger.filesmerger import utils as fmergerutils
 
+
 logger = logging.getLogger(__name__)
+
 
 def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
 
@@ -27,7 +33,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
         line_cocc = fin_cocc.readline()
 
         line_freq_left = fin_freqs_left.readline()
-        # new_start_from = fin_freqs_left.tell()
+
         cat_l, freq_l = line_freq_left.strip().split("\t")
         freq_l = float(freq_l)
 
@@ -42,14 +48,9 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
             cat1, cat2 = cats.split(" ")
             freq = float(freq)
 
-            # print(cat1, cat2, freq, "---", cat_l, cat_l<cat1, "---", cat_r, cat_r<cat2)
-
             while cat_l < cat1:
                 line_freq_left = fin_freqs_left.readline()
-                # first_start_from = new_start_from
-                # new_start_from = fin_freqs_left.tell()
                 cat_l, freq_l, = line_freq_left.strip().split("\t")
-                # print("HERE new cat l:", cat_l)
                 freq_l = float(freq_l)
 
             if cat_r > cat2:
@@ -85,7 +86,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
             lineno += 1
 
             if not lineno % 10000:
-                logger.info("PROCESSING LINE {}".format(lineno))
+                logger.info(f"PROCESSING LINE {lineno}")
 
     id_to_item = [0]*id_max
     for item, id in item_to_id.items():
@@ -105,3 +106,38 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
         for el in u:
             print("{}\t{}".format(id_to_item[el_no], " ".join(str(x) for x in el)), file=fout)
             el_no += 1
+
+
+def compute_simmatrix(output_dir: str, input_dsm_vec: str, input_dsm_idx: str, 
+                      left_subset_path: str, right_subset_path: str) -> None:
+    """_summary_
+
+    Args:
+        output_dir (str): _description_
+        input_dsm (str): _description_
+        left_subset_path (str): _description_
+        right_subset_path (str): _description_
+    """
+
+    left_vectors_to_load = set()
+    if not left_subset_path == "all":
+        left_vectors_to_load = dutils.load_catenae_set(left_subset_path, math.inf)
+
+    right_vectors_to_load = set()
+    if not right_subset_path == "all":
+        right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
+    
+    vectors_to_load = None
+    if len(left_vectors_to_load) and len(right_vectors_to_load):
+        vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
+
+    print(vectors_to_load)
+
+    DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
+
+    simmatrix = pairwise_distances_chunked(DSM, metric="cosine", working_memory=16000)
+    # simmatrix = pairwise_distances_chunked(DSM, metric="cosine")
+
+    for chunk in simmatrix:
+        print(chunk.shape)
+        input()

@@ -1,6 +1,6 @@
 """_summary_
 """
-    
+
 import argparse
 from argparse import RawTextHelpFormatter, ArgumentDefaultsHelpFormatter
 import logging.config
@@ -9,6 +9,7 @@ import sys
 
 from catenae.utils import config_utils as cutils
 from catenae.core import statistics as stats
+from catenae.utils import files_utils as futils
 
 from catenae.core import extraction
 from catenae.core import dsm
@@ -28,7 +29,7 @@ def _compute_pos_stats(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     corpus_dir = args.corpus_dirpath
     pos_list = args.pos
 
@@ -42,7 +43,7 @@ def _compute_morph_stats(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     corpus_dir = args.corpus_dirpath
     trait = args.trait
     values_list = args.values
@@ -73,7 +74,7 @@ def _compute_verbedges_stats(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     corpus_dir = args.corpus_dirpath
     edges = args.number_edges
 
@@ -87,7 +88,7 @@ def _compute_sbj_stats(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     corpus_dir = args.corpus_dirpath
 
     stats.compute_sbj_distribution(output_dir, corpus_dir)
@@ -100,7 +101,7 @@ def _compute_synrel_stats(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     corpus_dir = args.corpus_dirpath
     synrel_list = args.synrels
 
@@ -114,7 +115,7 @@ def _extract_catenae(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     corpus_dir = args.corpus_dirpath
 
     min_len_sentence = args.min_len_sentence
@@ -137,7 +138,7 @@ def _weight_catenae(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
 
     items_filepath = args.items_filepath
     totals_filepath = args.totals_filepath
@@ -154,7 +155,7 @@ def _filter_catenae(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
 
     input_file = args.input_filepath
     frequency_threshold = args.min_freq
@@ -172,7 +173,7 @@ def _extract_cooccurrences(args: argparse.Namespace) -> None:
     Args:
         args (argparse.Namespace): _description_
     """
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     corpus_dir = args.corpus_dirpath
     accepted_catenae_filepath = args.accepted_catenae
     top_k = args.topk
@@ -203,7 +204,7 @@ def _build_dsm(args: argparse.Namespace) -> None:
 
     # TODO: add parameter for dimensions
 
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     cooccurrences_filepath = args.cooccurrences_filepath
     frequences_filepath = args.frequences_filepath
     TOT = args.total
@@ -218,7 +219,7 @@ def _sample_input(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     input_dir = args.corpus_dirpath
     size = args.size
     seed = args.seed
@@ -233,7 +234,7 @@ def _udparse(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     input_dir = args.input_dir
     model_path = args.model
 
@@ -247,7 +248,7 @@ def _correlate(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     filenames_list = args.files_list
     topk = args.top_k
     mi = args.mi_threshold
@@ -263,7 +264,7 @@ def _corecatenae(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     input_filenames_list = args.input_files_list
     babbling_filenames_list = args.babbling_files_list
     topk = args.top_k
@@ -278,11 +279,28 @@ def _extract_sentences(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     
-    output_dir = args.output_dir
+    output_dir = futils.check_or_create_dir(args.output_dir)
     input_dir = args.input_dir
     catenae_list = args.catenae_list
     
     extraction.extract_sentences(output_dir, input_dir, catenae_list)
+
+
+def _compute_simmatrix(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+
+    output_dir = futils.check_or_create_dir(args.output_dir)
+    input_dsm_vec = args.dsm_vec
+    input_dsm_idx = args.dsm_idx
+    left_subset_path = args.reduced_left_matrix
+    right_subset_path = args.reduced_right_matrix
+
+    dsm.compute_simmatrix(output_dir, input_dsm_vec, input_dsm_idx, 
+                          left_subset_path, right_subset_path)
 
 
 def main() -> None:
@@ -527,6 +545,23 @@ def main() -> None:
     parser_extractsentences.add_argument("-c", "--catenae-list", nargs="+",
                                          help="list of catenae to look for")
     parser_extractsentences.set_defaults(func=_extract_sentences)
+
+
+    parser_simmatrix = subparsers.add_parser("similarity-matrix",
+                                             description="compute full similarity matrix for dsm",
+                                             help="compute full similarity matrix for dsm",
+                                             formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_simmatrix.add_argument("-o", "--output-dir", default="data/output_simmatrix/",
+                                  help="path to output dir, default is data/output_simmatrix/")
+    parser_simmatrix.add_argument("-s", "--dsm-vec", required=True,
+                                  help="path to file containing distributional space vectors")
+    parser_simmatrix.add_argument("-i", "--dsm-idx", required=True,
+                                  help="path to file containing distributional space indexes")
+    parser_simmatrix.add_argument("--reduced-left-matrix", default="all",
+                                  help="optional path to first subset of items")
+    parser_simmatrix.add_argument("--reduced-right-matrix", default="all",
+                                  help="optional path to second subset of items")
+    parser_simmatrix.set_defaults(func=_compute_simmatrix)
 
 
     # # Extract pairs of catenae at different abstraction levels

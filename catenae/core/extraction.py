@@ -374,17 +374,21 @@ def extract_sentences(output_dir: str, input_dir: str, catenae_list: List[str]) 
         input_file (str): _description_
         catenae_list (list[str]): _description_
     """
-    print(catenae_list)
+    
+    fout_list_sents = {}
+    fout_list_cats = {}
+    
+    for catena in catenae_list:
+        catena_split = catena.split("|")
+        fout_list_sents[catena] = open(output_dir+"/"+" ".join(catena_split)+".sentences", "w")
+        fout_list_cats[catena] = open(output_dir+"/"+" ".join(catena_split)+".cat", "w")
+        
     input_files = glob.glob(input_dir+"/*")
-    for input_file in input_files:
-        for sentence_no, sentence in enumerate(cutils.PlainCoNLLReader(input_file, 
-                                                                       min_len=1, 
-                                                                       max_len=25)):
+    for input_file in tqdm.tqdm(input_files):
+        for sentence_no, sentence in tqdm.tqdm(enumerate(cutils.PlainCoNLLReader(input_file, 
+                                                                                 min_len=1, 
+                                                                                 max_len=25))):
             if sentence:
-                # print(sentence)
-
-                if not sentence_no % 100:
-                    logger.info("{} - {}".format(sentence_no, len(sentence)))
                 
                 freqdict = collections.defaultdict(int)
                 catdict = collections.defaultdict(int)
@@ -395,8 +399,7 @@ def extract_sentences(output_dir: str, input_dir: str, catenae_list: List[str]) 
 
                 catenae = catdict.keys()
                 
-                if any(x in catenae for x in catenae_list):
-                    print("found matching sentence")
-                    print(sentence)
-                    print(catenae)
-                    input()
+                for catena in catenae_list:
+                    if catena in catenae:
+                        print("\n".join(sentence)+"\n", file=fout_list_sents[catena])
+                        print("\n".join(catenae)+"\n", file=fout_list_cats[catena])

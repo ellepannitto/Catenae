@@ -1,4 +1,3 @@
-# pylint: disable=unspecified-encoding
 import logging
 import collections
 import gzip
@@ -13,6 +12,15 @@ logger = logging.getLogger(__name__)
 
 def correlate(output_dir: str, filenames_list: List[str], 
               topk: int, mi_threshold: int, fr_threshold: int) -> None:
+    """_summary_
+
+    Args:
+        output_dir (str): _description_
+        filenames_list (List[str]): _description_
+        topk (int): _description_
+        mi_threshold (int): _description_
+        fr_threshold (int): _description_
+    """
 
     catdict = {}
     catdict_lists = {}
@@ -25,9 +33,6 @@ def correlate(output_dir: str, filenames_list: List[str],
             line = fin.readline()
             
             for line in fin:
-            #while first_mi > mi_threshold:
-                #print(line)
-#                line = fin.readline()
                 linesplit = line.strip().split("\t")
                 catena = linesplit[0].lower()
                 freq = float(linesplit[1])
@@ -44,9 +49,9 @@ def correlate(output_dir: str, filenames_list: List[str],
 
         logger.info("Catenae in {}: {}".format(filename, len(catdict_lists[filename])))
 
-        with gzip.open(output_dir+"/{}.TOP{}".format(basename, topk), "wt") as fout:
+        with gzip.open(output_dir+f"/{basename}.TOP{topk}", "wt") as fout:
             for catena, mi in catdict_lists[filename][:topk]:
-                print("{}\t{}".format(catena, mi), file=fout)
+                print(f"{catena}\t{mi}", file=fout)
 
     # SPEARMAN
     stats = {}
@@ -55,7 +60,7 @@ def correlate(output_dir: str, filenames_list: List[str],
     zeros = {}
     vectors = {}
 
-    with open(output_dir+"/spearmanr-TOP{}.txt".format(topk), "w") as fout:
+    with open(output_dir+f"/spearmanr-TOP{topk}.txt", "w") as fout:
         for filename in catdict:
 
             stats[filename] = collections.defaultdict(lambda: -1.0)
@@ -91,7 +96,16 @@ def correlate(output_dir: str, filenames_list: List[str],
                 print("{}\t{}\t{}\t{}".format(filename, filename2, s, p_s), file=fout)
 
 
-def corecatenae(output_dir, input_filenames_list, babbling_filenames_list, topk):
+def corecatenae(output_dir: str, input_filenames_list: List[str], 
+                babbling_filenames_list: List[str], topk: int) -> None:
+    """_summary_
+
+    Args:
+        output_dir (str): _description_
+        input_filenames_list (List[str]): _description_
+        babbling_filenames_list (List[str]): _description_
+        topk (int): _description_
+    """
 
     inputs = {}
     babblings = {}
