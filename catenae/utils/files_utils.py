@@ -28,3 +28,5 @@ def check_or_create_dir(path: str) -> None:
         os.mkdir(path)
     else:
         logger.info(f"Checked path: {path}")
+
+    return path

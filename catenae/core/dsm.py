@@ -2,6 +2,7 @@ import logging
 import collections
 import gzip
 import math
+import tqdm
 
 import numpy as np
 import scipy as sp
@@ -131,13 +132,24 @@ def compute_simmatrix(output_dir: str, input_dsm_vec: str, input_dsm_idx: str,
     if len(left_vectors_to_load) and len(right_vectors_to_load):
         vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
 
-    print(vectors_to_load)
-
     DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
 
     simmatrix = pairwise_distances_chunked(DSM, metric="cosine", working_memory=16000)
     # simmatrix = pairwise_distances_chunked(DSM, metric="cosine")
 
-    for chunk in simmatrix:
-        print(chunk.shape)
-        input()
+    with gzip.open(output_dir+"simmatrix.sim.gz", "at") as fout_sim, \
+        gzip.open(output_dir+"simmatrix.idx.gz", "at") as fout_idx, \
+        gzip.open(input_dsm_idx, "rt") as fin_idx:
+        
+        # i = 0
+        for chunk_no, chunk in enumerate(simmatrix):
+            logger.info(f"Dumping chunk {chunk_no}...")
+            #np.savetxt(fout, chunk, delimiter=' ', newline="\n")
+            for el in tqdm.tqdm(chunk):
+                sorted_el = sorted(zip(el, range(len(el))))
+                sorted_sim = [x for x, _ in sorted_el[:10_000]]
+                sorted_idx = [y for _, y in sorted_el[:10_000]]
+
+                print(" ".join(str(x) for x in sorted_sim), file=fout_sim)
+                print(" ".join(str(x) for x in sorted_idx), file=fout_idx)
+                            

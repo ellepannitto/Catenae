@@ -58,9 +58,6 @@ def load_catenae_set(filepath: str, topk: int, catenae_set: Set = None) -> Set:
 
 def _generate_lines(input_path_vec:str, input_path_idx: str, 
                     vectors_to_load: set = None) ->  Iterable[str]:
-
-    print("INSIDE GEN LINES")
-    print(vectors_to_load)
     
     with gzip.open(input_path_vec, "rt") as fin_vec, \
         gzip.open(input_path_idx, "rt") as fin_idx:
@@ -68,12 +65,8 @@ def _generate_lines(input_path_vec:str, input_path_idx: str,
         for idx_line in fin_idx:
             vec_line = fin_vec.readline()
             idx_line = " ".join(idx_line.strip().split("|")) #TODO: change
-#            print(idx_line)
 
             if not vectors_to_load or idx_line in vectors_to_load:
-                
-                # print("found", idx_line)
-
                 yield vec_line
 
 
@@ -81,7 +74,5 @@ def load_vectors(input_path_vec: str, input_path_idx: str,
                  vectors_to_load: set = None) -> Tuple[Any, Any, Any]:
 
     vectors = np.loadtxt(_generate_lines(input_path_vec, input_path_idx, vectors_to_load))
-
-    print(vectors.shape)
 
     return vectors
