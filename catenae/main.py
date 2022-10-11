@@ -299,8 +299,12 @@ def _compute_simmatrix(args: argparse.Namespace) -> None:
     left_subset_path = args.reduced_left_matrix
     right_subset_path = args.reduced_right_matrix
 
-    dsm.compute_simmatrix(output_dir, input_dsm_vec, input_dsm_idx, 
-                          left_subset_path, right_subset_path)
+    if args.chunked:
+        dsm.compute_simmatrix_chunked(output_dir, input_dsm_vec, input_dsm_idx,
+                                      left_subset_path, right_subset_path)
+    else:
+        dsm.compute_simmatrix(output_dir, input_dsm_vec, input_dsm_idx,
+                              left_subset_path, right_subset_path)
 
 
 def main() -> None:
@@ -561,6 +565,8 @@ def main() -> None:
                                   help="optional path to first subset of items")
     parser_simmatrix.add_argument("--reduced-right-matrix", default="all",
                                   help="optional path to second subset of items")
+    parser_simmatrix.add_argument("--chunked", type=bool, default=False,
+                                  help="set to True for chunked version, memory-efficient")
     parser_simmatrix.set_defaults(func=_compute_simmatrix)
 
 
