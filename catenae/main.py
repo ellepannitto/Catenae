@@ -565,17 +565,10 @@ def main() -> None:
                                   help="optional path to first subset of items")
     parser_simmatrix.add_argument("--reduced-right-matrix", default="all",
                                   help="optional path to second subset of items")
-    parser_simmatrix.add_argument("--chunked", type=bool, default=False,
+    parser_simmatrix.add_argument("--chunked", action='store_true',
                                   help="set to True for chunked version, memory-efficient")
     parser_simmatrix.set_defaults(func=_compute_simmatrix)
 
-
-    # # Extract pairs of catenae at different abstraction levels
-    # parser_pairs = subparsers.add_parser("pairs",
-    #                                      description="extract pairs of catenae",
-    #                                      help="extract pairs of catenae",
-    #                                      formatter_class=ArgumentDefaultsHelpFormatter)
-    #
     args = root_parser.parse_args()
     if "func" not in args:
         root_parser.print_usage()

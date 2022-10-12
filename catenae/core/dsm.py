@@ -110,7 +110,8 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
 
 
 def compute_simmatrix_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx: str, 
-                              left_subset_path: str, right_subset_path: str) -> None:
+                              left_subset_path: str, right_subset_path: str,
+                              working_memory: int) -> None:
     """_summary_
 
     Args:
@@ -134,7 +135,7 @@ def compute_simmatrix_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx
 
     DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
 
-    simmatrix = pairwise_distances_chunked(DSM, metric="cosine", working_memory=16000)
+    simmatrix = pairwise_distances_chunked(DSM, metric="cosine", working_memory=working_memory)
 
     with gzip.open(output_dir+"simmatrix.sim.gz", "at") as fout_sim, \
         gzip.open(output_dir+"simmatrix.idx.gz", "at") as fout_idx, \
