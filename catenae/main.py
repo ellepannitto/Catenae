@@ -10,7 +10,6 @@ import sys
 from catenae.utils import config_utils as cutils
 from catenae.utils import main_utils as mutils
 
-
 config_dict = cutils.load(os.path.join(os.path.dirname(__file__), 'logging_utils', 'logging.yml'))
 logging.config.dictConfig(config_dict)
 
@@ -35,7 +34,7 @@ def main() -> None:
                                  help="path to corpus directory")
     parser_pos_stats.add_argument("-p", "--pos", required=True, nargs="+",
                                  help="Universal Part of Speech tag")
-    parser_pos_stats.set_defaults(func=mutils._compute_pos_stats)
+    parser_pos_stats.set_defaults(func=mutils.compute_pos_stats)
 
     parser_morph_stats = subparsers.add_parser('morph-stats',
                                                description='compute list of stats for a corpus',
@@ -49,7 +48,7 @@ def main() -> None:
                                     help="Morphological trait name")
     parser_morph_stats.add_argument("-v", "--values", required=True, nargs="+",
                                     help="Morphological trait values")
-    parser_morph_stats.set_defaults(func=mutils._compute_morph_stats)
+    parser_morph_stats.set_defaults(func=mutils.compute_morph_stats)
 
     parser_verbedges_stats = subparsers.add_parser('verbedges-stats',
                                                    description='compute list of stats for a corpus',
@@ -61,7 +60,7 @@ def main() -> None:
                                         help="path to corpus directory")
     parser_verbedges_stats.add_argument("-n", "--number-edges", required=True, type=int,
                                         help="Number of edges for verb")
-    parser_verbedges_stats.set_defaults(func=mutils._compute_verbedges_stats)
+    parser_verbedges_stats.set_defaults(func=mutils.compute_verbedges_stats)
 
     parser_sbj_stats = subparsers.add_parser('subj-stats',
                                              description='compute list of stats for a corpus',
@@ -71,7 +70,7 @@ def main() -> None:
                                   help="path to output dir")
     parser_sbj_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
                                   help="path to corpus directory")
-    parser_sbj_stats.set_defaults(func=mutils._compute_sbj_stats)
+    parser_sbj_stats.set_defaults(func=mutils.compute_sbj_stats)
 
     parser_synrel_stats = subparsers.add_parser('synrel-stats',
                                                 description='compute list of stats for a corpus',
@@ -83,7 +82,7 @@ def main() -> None:
                                      help="path to corpus directory")
     parser_synrel_stats.add_argument("-r", "--synrels", required=True, nargs="+",
                                      help="Universal Syntactic Relation tag")
-    parser_synrel_stats.set_defaults(func=mutils._compute_synrel_stats)
+    parser_synrel_stats.set_defaults(func=mutils.compute_synrel_stats)
 
     # Extraction of catenae
     parser_extract = subparsers.add_parser('extract',
@@ -106,7 +105,7 @@ def main() -> None:
                                 help="minimium length for each catena to be kept")
     parser_extract.add_argument("--max-len-catena", type=int, default=5,
                                 help="maximum length for each catena to be kept. WARNING: highly impacts ram usage")
-    parser_extract.set_defaults(func=mutils._extract_catenae)
+    parser_extract.set_defaults(func=mutils.extract_catenae)
 
     # Weight list of catenae
     parser_weight = subparsers.add_parser('weight',
@@ -121,7 +120,7 @@ def main() -> None:
     requiredWeight.add_argument("-t", "--totals-filepath", required=True)
     requiredWeight.add_argument("-c", "--catenae-filepath", required=True)
 
-    parser_weight.set_defaults(func=mutils._weight_catenae)
+    parser_weight.set_defaults(func=mutils.weight_catenae)
 
     # Extract list of accepted catenae
     parser_filter = subparsers.add_parser("filter",
@@ -140,7 +139,7 @@ def main() -> None:
                                help="minimum catena length")
     parser_filter.add_argument("-M", "--max-len-catena", type=int, default=5,
                                help="maximum catena length")
-    parser_filter.set_defaults(func=mutils._filter_catenae)
+    parser_filter.set_defaults(func=mutils.filter_catenae)
 
     # Extract co-occurrences
     parser_coocc = subparsers.add_parser('cooccurrences',
@@ -171,7 +170,7 @@ def main() -> None:
                               help="include words regardless of their frequency and weight values")
     parser_coocc.add_argument("--words-filepath",
                               help="filepath to words list, to include if len one items are required")
-    parser_coocc.set_defaults(func=mutils._extract_cooccurrences)
+    parser_coocc.set_defaults(func=mutils.extract_cooccurrences)
 
     # Build DSM
     parser_dsm = subparsers.add_parser("build-dsm",
@@ -186,7 +185,7 @@ def main() -> None:
                             help="path to frequencies file", required=True)
     parser_dsm.add_argument("-t", "--total", type=int, 
                             help="sum of frequencies", required=True)
-    parser_dsm.set_defaults(func=mutils._build_dsm)
+    parser_dsm.set_defaults(func=mutils.build_dsm)
 
     # Sample input of determinate size based on number of words
     parser_sample = subparsers.add_parser("sample-input",
@@ -200,7 +199,7 @@ def main() -> None:
     parser_sample.add_argument("-s", "--size", type=int, required=True,
                                help="number of words to include in the sample")
     parser_sample.add_argument("--seed", type=int, default=42)
-    parser_sample.set_defaults(func=mutils._sample_input)
+    parser_sample.set_defaults(func=mutils.sample_input)
 
 
     parser_udparse = subparsers.add_parser("udparse",
@@ -213,7 +212,7 @@ def main() -> None:
                                help="path to output dir, default is data/input/")
     parser_udparse.add_argument("-m", "--model", required=True,
                                 help="path to file containing model for udpipe lib")    
-    parser_udparse.set_defaults(func=mutils._udparse)                       
+    parser_udparse.set_defaults(func=mutils.udparse)                       
 
 
     parser_correlate = subparsers.add_parser("spearman",
@@ -230,7 +229,7 @@ def main() -> None:
                                   help="threshold on frequency")
     parser_correlate.add_argument("-l", "--files-list", required=True, nargs="+",
                                   help="list of filenames to be used as input")
-    parser_correlate.set_defaults(func=mutils._correlate)
+    parser_correlate.set_defaults(func=mutils.correlate)
 
 
     parser_corecatenae = subparsers.add_parser("corecatenae",
@@ -245,7 +244,7 @@ def main() -> None:
                                     help="list of filenames produced in the babbling phase to be used as input")
     parser_corecatenae.add_argument("-k", "--top-k", type=int, default=10_000,
                                     help="threshold")
-    parser_corecatenae.set_defaults(func=mutils._corecatenae)
+    parser_corecatenae.set_defaults(func=mutils.corecatenae)
     
     
     parser_extractsentences = subparsers.add_parser("extract-sentences",
@@ -258,7 +257,7 @@ def main() -> None:
                                          help="directory containing parsed files to be used as input")
     parser_extractsentences.add_argument("-c", "--catenae-list", nargs="+",
                                          help="list of catenae to look for")
-    parser_extractsentences.set_defaults(func=mutils._extract_sentences)
+    parser_extractsentences.set_defaults(func=mutils.extract_sentences)
 
 
     parser_simmatrix = subparsers.add_parser("similarity-matrix",
@@ -279,7 +278,22 @@ def main() -> None:
                                   help="set to True for chunked version, memory-efficient")
     parser_simmatrix.add_argument("--working-memory", default=16_000, type=int,
                                   help="Working memory (MiB) for pairwise computation")
-    parser_simmatrix.set_defaults(func=mutils._compute_simmatrix)
+    parser_simmatrix.set_defaults(func=mutils.compute_simmatrix)
+
+
+    parser_reducesimmatrix = subparsers.add_parser("reduce-simmatrix",
+                                                   description="query nearest neighbors for catena",
+                                                   help="query nearest neighbors for catena",
+                                                   formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_reducesimmatrix.add_argument("-o", "--output-dir", default="data/output_reducedsimmatrix/",
+                                        help="path to output dir, default is data/output_reducedsimmatrix/")
+    parser_reducesimmatrix.add_argument("--similarities-values", required=True, nargs="+",
+                                        help="paths to gzipped file containing cosine similarities")
+    parser_reducesimmatrix.add_argument("--index-map", required=True,
+                                        help="path to file containing map from indexes to catenae")
+    parser_reducesimmatrix.add_argument("-k", "--top-k", default=10_000, type=int,
+                                        help="number of dimensions to keep")
+    parser_reducesimmatrix.set_defaults(func=mutils.reduce_simmatrix)
 
 
     parser_glass = subparsers.add_parser("glass",
@@ -292,7 +306,7 @@ def main() -> None:
                               help="path to input file in CoNLL format")
     parser_glass.add_argument("-c", "--catenae", required=True,
                               help="path to file containing catenae")
-    parser_glass.set_defaults(func=mutils._glass)
+    parser_glass.set_defaults(func=mutils.glass)
 
     args = root_parser.parse_args()
     if "func" not in args:

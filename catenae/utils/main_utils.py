@@ -17,7 +17,7 @@ from catenae.utils import files_utils as futils
 logger = logging.getLogger(__name__)
 
 
-def _compute_pos_stats(args: argparse.Namespace) -> None:
+def compute_pos_stats(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -31,7 +31,7 @@ def _compute_pos_stats(args: argparse.Namespace) -> None:
     stats.compute_pos_distribution(output_dir, corpus_dir, pos_list)
 
 
-def _compute_morph_stats(args: argparse.Namespace) -> None:
+def compute_morph_stats(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -46,7 +46,7 @@ def _compute_morph_stats(args: argparse.Namespace) -> None:
     stats.compute_morph_distribution(output_dir, corpus_dir, trait, values_list)
 
 
-# def _compute_mood_stats(args):
+# def compute_mood_stats(args):
 #     output_dir = args.output_dir
 #     corpus_dir = args.corpus_dirpath
 #     mood_list = args.mood
@@ -54,7 +54,7 @@ def _compute_morph_stats(args: argparse.Namespace) -> None:
 #     stats.compute_mood_distribution(output_dir, corpus_dir, mood_list)
 #
 #
-# def _compute_form_stats(args):
+# def compute_form_stats(args):
 #     output_dir = args.output_dir
 #     corpus_dir = args.corpus_dirpath
 #     form_list = args.form
@@ -62,7 +62,7 @@ def _compute_morph_stats(args: argparse.Namespace) -> None:
 #     stats.compute_tense_distribution(output_dir, corpus_dir, form_list)
 
 
-def _compute_verbedges_stats(args: argparse.Namespace) -> None:
+def compute_verbedges_stats(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -76,7 +76,7 @@ def _compute_verbedges_stats(args: argparse.Namespace) -> None:
     stats.compute_verbedges_distribution(output_dir, corpus_dir, edges)
 
 
-def _compute_sbj_stats(args: argparse.Namespace) -> None:
+def compute_sbj_stats(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -89,7 +89,7 @@ def _compute_sbj_stats(args: argparse.Namespace) -> None:
     stats.compute_sbj_distribution(output_dir, corpus_dir)
 
 
-def _compute_synrel_stats(args: argparse.Namespace) -> None:
+def compute_synrel_stats(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -103,7 +103,7 @@ def _compute_synrel_stats(args: argparse.Namespace) -> None:
     stats.compute_synrel_distribution(output_dir, corpus_dir, synrel_list)
 
 
-def _extract_catenae(args: argparse.Namespace) -> None:
+def extract_catenae(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -126,7 +126,7 @@ def _extract_catenae(args: argparse.Namespace) -> None:
                                min_freq, min_len_catena, max_len_catena)
 
 
-def _weight_catenae(args: argparse.Namespace) -> None:
+def weight_catenae(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -143,7 +143,7 @@ def _weight_catenae(args: argparse.Namespace) -> None:
                               items_filepath, totals_filepath, catenae_filepath)
 
 
-def _filter_catenae(args: argparse.Namespace) -> None:
+def filter_catenae(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -162,7 +162,7 @@ def _filter_catenae(args: argparse.Namespace) -> None:
                               min_len_catena, max_len_catena)
 
 
-def _extract_cooccurrences(args: argparse.Namespace) -> None:
+def extract_cooccurrences(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -191,7 +191,7 @@ def _extract_cooccurrences(args: argparse.Namespace) -> None:
                                     include_words, words_filepath)
 
 
-def _build_dsm(args: argparse.Namespace) -> None:
+def build_dsm(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -208,7 +208,7 @@ def _build_dsm(args: argparse.Namespace) -> None:
     dsm.build(output_dir, cooccurrences_filepath, frequences_filepath, TOT)
 
 
-def _sample_input(args: argparse.Namespace) -> None:
+def sample_input(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -223,7 +223,7 @@ def _sample_input(args: argparse.Namespace) -> None:
     corpus.sample(output_dir, input_dir, size, seed)
 
 
-def _udparse(args: argparse.Namespace) -> None:
+def udparse(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -237,7 +237,7 @@ def _udparse(args: argparse.Namespace) -> None:
     corpus.parse(output_dir, input_dir, model_path)
 
 
-def _correlate(args: argparse.Namespace) -> None:
+def correlate(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -253,7 +253,7 @@ def _correlate(args: argparse.Namespace) -> None:
     analysis.correlate(output_dir, filenames_list, topk, mi, frequency)
 
 
-def _corecatenae(args: argparse.Namespace) -> None:
+def corecatenae(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -268,7 +268,7 @@ def _corecatenae(args: argparse.Namespace) -> None:
     analysis.corecatenae(output_dir, input_filenames_list, babbling_filenames_list, topk)
 
 
-def _extract_sentences(args: argparse.Namespace) -> None:
+def extract_sentences(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -282,7 +282,7 @@ def _extract_sentences(args: argparse.Namespace) -> None:
     extraction.extract_sentences(output_dir, input_dir, catenae_list)
 
 
-def _compute_simmatrix(args: argparse.Namespace) -> None:
+def compute_simmatrix(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -297,18 +297,34 @@ def _compute_simmatrix(args: argparse.Namespace) -> None:
     working_memory = args.working_memory
 
     if args.chunked:
-        dsm.compute_simmatrix_chunked(output_dir, input_dsm_vec, input_dsm_idx,
-                                      left_subset_path, right_subset_path,
-                                      working_memory)
+        dsm.compute_simmatrix_npy(output_dir, input_dsm_vec, input_dsm_idx,
+                                  left_subset_path, right_subset_path,
+                                  working_memory)
     else:
         dsm.compute_simmatrix(output_dir, input_dsm_vec, input_dsm_idx,
                               left_subset_path, right_subset_path)
 
 
-def _glass(args: argparse.Namespace) -> None:
+def glass(args: argparse.Namespace) -> None:
     """_summary_
 
     Args:
         args (argparse.Namespace): _description_
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
+
+
+def reduce_simmatrix(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+
+    output_dir = futils.check_or_create_dir(args.output_dir)
+    similarities_values = args.similarities_values
+    index_map = args.index_map
+    top_k = args.top_k
+
+
+    dsm.reduce(output_dir, similarities_values, index_map, top_k)

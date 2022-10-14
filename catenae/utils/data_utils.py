@@ -1,5 +1,6 @@
 import itertools
 import gzip
+import tqdm
 
 from typing import Set, Any, Iterable, Tuple, Generator
 
@@ -62,7 +63,7 @@ def _generate_lines(input_path_vec:str, input_path_idx: str,
     with gzip.open(input_path_vec, "rt") as fin_vec, \
         gzip.open(input_path_idx, "rt") as fin_idx:
 
-        for idx_line in fin_idx:
+        for idx_line in tqdm.tqdm(fin_idx):
             vec_line = fin_vec.readline()
             idx_line = " ".join(idx_line.strip().split("|")) #TODO: change
 
@@ -71,7 +72,7 @@ def _generate_lines(input_path_vec:str, input_path_idx: str,
 
 
 def load_vectors(input_path_vec: str, input_path_idx: str, 
-                 vectors_to_load: set = None) -> Tuple[Any, Any, Any]:
+                 vectors_to_load: set = None) -> np.ndarray:
 
     vectors = np.loadtxt(_generate_lines(input_path_vec, input_path_idx, vectors_to_load))
 
