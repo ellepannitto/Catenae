@@ -297,9 +297,9 @@ def compute_simmatrix(args: argparse.Namespace) -> None:
     working_memory = args.working_memory
 
     if args.chunked:
-        dsm.compute_simmatrix_npy(output_dir, input_dsm_vec, input_dsm_idx,
-                                  left_subset_path, right_subset_path,
-                                  working_memory)
+        dsm.compute_simmatrix_chunked(output_dir, input_dsm_vec, input_dsm_idx,
+                                      left_subset_path, right_subset_path,
+                                      working_memory)
     else:
         dsm.compute_simmatrix(output_dir, input_dsm_vec, input_dsm_idx,
                               left_subset_path, right_subset_path)
