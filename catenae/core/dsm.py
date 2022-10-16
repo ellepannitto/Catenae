@@ -118,9 +118,11 @@ def compute_simmatrix_npy(output_dir: str, input_dsm_vec: str, input_dsm_idx: st
 
     Args:
         output_dir (str): _description_
-        input_dsm (str): _description_
+        input_dsm_vec (str): _description_
+        input_dsm_idx (str): _description_
         left_subset_path (str): _description_
         right_subset_path (str): _description_
+        working_memory (int): _description_
     """
 
     left_vectors_to_load = set()
@@ -141,23 +143,15 @@ def compute_simmatrix_npy(output_dir: str, input_dsm_vec: str, input_dsm_idx: st
     simmatrix = pairwise_distances_chunked(DSM, metric="cosine", working_memory=working_memory)
 
     similarities_fname = output_dir+"simmatrix.sim"
-    # idxs_fname = output_dir+"simmatrix.idx"
     
     for chunk_no, chunk in tqdm.tqdm(enumerate(simmatrix)):
 
+        chunk_no = str(chunk_no).zfill(2)
         logger.info("Processing chunk {} ...".format(chunk_no))
         npy_similarities_fname = f"{similarities_fname}.{chunk_no}.npy"
-        # npy_idxs_fname = f"{idxs_fname}.{chunk_no}.npy"
-
-        # logger.info("Finding top 20 items...")
-        # idxs = np.argpartition(chunk, -20_000)[-20_000:]
-        # idxs = np.argpartition(chunk, -20)[-20:]
-
-        # matrix_to_dump = chunk[idxs]
 
         logger.info("Saving matrices...")
         np.save(npy_similarities_fname, chunk)
-        # np.save(npy_idxs_fname, idxs)
 
 
 def compute_simmatrix_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx: str, 
