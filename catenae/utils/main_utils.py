@@ -295,14 +295,32 @@ def compute_simmatrix(args: argparse.Namespace) -> None:
     left_subset_path = args.reduced_left_matrix
     right_subset_path = args.reduced_right_matrix
     working_memory = args.working_memory
+    top_k = args.top_k
 
-    if args.chunked:
+    if args.chunked and args.reduced:
+        dsm.compute_simmatrix_and_reduce_chunked(output_dir, input_dsm_vec, input_dsm_idx,
+                                                 left_subset_path, right_subset_path,
+                                                 working_memory, top_k)
+    elif args.chunked:
         dsm.compute_simmatrix_chunked(output_dir, input_dsm_vec, input_dsm_idx,
                                       left_subset_path, right_subset_path,
                                       working_memory)
     else:
         dsm.compute_simmatrix(output_dir, input_dsm_vec, input_dsm_idx,
                               left_subset_path, right_subset_path)
+
+
+def query_neighbors(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    input_dsm_sim = args.similarities_matrix
+    input_dsm_idx = args.indexes_matrix
+    input_idx_map = args.indexes_map
+
+    dsm.query_neighbors(input_dsm_sim, input_dsm_idx, input_idx_map)
 
 
 def glass(args: argparse.Namespace) -> None:
@@ -323,8 +341,6 @@ def reduce_simmatrix(args: argparse.Namespace) -> None:
 
     output_dir = futils.check_or_create_dir(args.output_dir)
     similarities_values = args.similarities_values
-    index_map = args.index_map
     top_k = args.top_k
 
-
-    dsm.reduce(output_dir, similarities_values, index_map, top_k)
+    dsm.reduce(output_dir, similarities_values, top_k)

@@ -63,7 +63,7 @@ def _generate_lines(input_path_vec:str, input_path_idx: str,
     with gzip.open(input_path_vec, "rt") as fin_vec, \
         gzip.open(input_path_idx, "rt") as fin_idx:
 
-        for idx_line in tqdm.tqdm(fin_idx):
+        for idx_line in tqdm.tqdm(fin_idx, desc="Reading file {input_path_vec}"):
             vec_line = fin_vec.readline()
             idx_line = " ".join(idx_line.strip().split("|")) #TODO: change
 

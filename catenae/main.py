@@ -275,9 +275,13 @@ def main() -> None:
     parser_simmatrix.add_argument("--reduced-right-matrix", default="all",
                                   help="optional path to second subset of items")
     parser_simmatrix.add_argument("--chunked", action='store_true',
-                                  help="set to True for chunked version, memory-efficient")
+                                  help="set to True for chunked version, ram-memory efficient")
     parser_simmatrix.add_argument("--working-memory", default=16_000, type=int,
                                   help="Working memory (MiB) for pairwise computation")
+    parser_simmatrix.add_argument("--reduced", action="store_true",
+                                  help="set to True for reduced version, disk-memory efficient. ONLY WORKS WITH CHUNKED VERSION")
+    parser_simmatrix.add_argument("-k", "--top-k", default=10_000, type=int,
+                                  help="number of dimensions to keep")
     parser_simmatrix.set_defaults(func=mutils.compute_simmatrix)
 
 
@@ -289,11 +293,22 @@ def main() -> None:
                                         help="path to output dir, default is data/output_reducedsimmatrix/")
     parser_reducesimmatrix.add_argument("--similarities-values", required=True, nargs="+",
                                         help="paths to gzipped file containing cosine similarities")
-    parser_reducesimmatrix.add_argument("--index-map", required=True,
-                                        help="path to file containing map from indexes to catenae")
     parser_reducesimmatrix.add_argument("-k", "--top-k", default=10_000, type=int,
                                         help="number of dimensions to keep")
     parser_reducesimmatrix.set_defaults(func=mutils.reduce_simmatrix)
+
+
+    parser_queryneighbors = subparsers.add_parser("query-neighbors",
+                                                  description="query nearest neighbors for catena",
+                                                  help="query nearest neighbors for catena",
+                                                  formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_queryneighbors.add_argument("-s", "--similarities-matrix", required=True,
+                                       help="path to file containing similarity values")
+    parser_queryneighbors.add_argument("-i", "--indexes-matrix", required=True,
+                                       help="path to file containing indexes values")
+    parser_queryneighbors.add_argument("-m", "--indexes-map", required=True,
+                                       help="path to file containing catena to index mapping")
+    parser_queryneighbors.set_defaults(func=mutils.query_neighbors)
 
 
     parser_glass = subparsers.add_parser("glass",
