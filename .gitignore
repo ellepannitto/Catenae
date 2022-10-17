@@ -142,3 +142,4 @@ dmypy.json
 
 FileMerger
 experiments/correlations_10speakers.py.ipynb
+experiments/core_and_periphery_10speakers.py.ipynb
