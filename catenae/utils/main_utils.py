@@ -330,6 +330,10 @@ def glass(args: argparse.Namespace) -> None:
         args (argparse.Namespace): _description_
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
+    input_filename = args.input
+    catenae_path = args.catenae
+
+    
 
 
 def reduce_simmatrix(args: argparse.Namespace) -> None:
