@@ -286,8 +286,8 @@ def main() -> None:
 
 
     parser_reducesimmatrix = subparsers.add_parser("reduce-simmatrix",
-                                                   description="query nearest neighbors for catena",
-                                                   help="query nearest neighbors for catena",
+                                                   description="reduce simmatrix to top K neighbors",
+                                                   help="reduce simmatrix to top K neighbors",
                                                    formatter_class=ArgumentDefaultsHelpFormatter)
     parser_reducesimmatrix.add_argument("-o", "--output-dir", default="data/output_reducedsimmatrix/",
                                         help="path to output dir, default is data/output_reducedsimmatrix/")
