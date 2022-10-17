@@ -140,22 +140,26 @@ def compute_simmatrix_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx
     logger.info("Loading vectors...")
     DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
 
+    logger.info("Computing pairwise distances chunked...")
     simmatrix = metrics.pairwise_distances_chunked(DSM, metric="cosine", working_memory=working_memory)
 
     similarities_fname = output_dir+"simmatrix.sim"
     
-    for chunk_no, chunk in tqdm.tqdm(enumerate(simmatrix)):
+    it = tqdm.tqdm(enumerate(simmatrix))
+    for chunk_no, chunk in it:
 
         chunk_no = str(chunk_no).zfill(2)
+        it.set_description(f"Processing chunk {chunk_no}...")
+
         logger.info(f"Processing chunk {chunk_no} ...")
         npy_similarities_fname = f"{similarities_fname}.{chunk_no}.npy"
 
+        ones = np.ones(chunk.shape)
+        chunk = chunk - ones
+        chunk = -chunk
+
         logger.info("Saving matrices...")
         np.save(npy_similarities_fname, chunk)
-
-
-def cosine_similarity(u, v):
-    return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
 
 
 def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx: str, 
@@ -177,21 +181,22 @@ def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, in
     logger.info("Loading vectors...")
     DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
 
-    simmatrix = metrics.pairwise_distances_chunked(DSM, metric=cosine_similarity, working_memory=working_memory)
+    logger.info("Computing pairwise distances chunked...")
+    simmatrix = metrics.pairwise_distances_chunked(DSM, metric="cosine", 
+                                                   working_memory=working_memory,
+                                                   n_jobs=-1)
 
     # similarities_fname = output_dir+"simmatrix.sim"
-
     matrix_topk = None
     idxs_topk = None
     first_update = True
 
     it = tqdm.tqdm(enumerate(simmatrix))
     for chunk_no, chunk in it:
-
+        
+        chunk_no = str(chunk_no).zfill(2)
         it.set_description(f"Processing chunk {chunk_no}...")
 
-        chunk_no = str(chunk_no).zfill(2)
-        logger.info(f"Processing chunk {chunk_no} ...")
         # npy_similarities_fname = f"{similarities_fname}.{chunk_no}.npy"
 
         # logger.info("Saving matrices...")
@@ -202,6 +207,10 @@ def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, in
         #     it.set_description(f"Processing filename {filename}")
 
         #     chunk = np.load(filename)
+        ones = np.ones(chunk.shape)
+        chunk = chunk - ones
+        chunk = -chunk
+        
         logger.info("Argpartition...")
         idxs = np.argpartition(-chunk, top_k)
 
@@ -303,18 +312,24 @@ def query_neighbors(input_dsm_sim: str, input_dsm_idx: str,
     logger.info("Loading matrix with indexes...")
     idx_matrix = np.load(input_dsm_idx)
 
-    catena = "@nsubj|@root"
+    while True:
 
-    if catena in cat_to_idx:
-        idx = cat_to_idx[catena]
-        print("Found catena", catena, "with index", idx)
+        catena = input("Type catena to query (e.g. @nsubj|@root):")
+        catena = catena.strip()
 
-        neighbors = sim_matrix[idx]
-        neighbors_idxs = idx_matrix[idx]
+        if catena in cat_to_idx:
+            
+            idx = cat_to_idx[catena]
+            print("Found catena", catena, "with index", idx)
 
-        pairs = zip(neighbors[:100], neighbors_idxs[:100])
+            neighbors = sim_matrix[idx]
+            neighbors_idxs = idx_matrix[idx]
 
-        sorted_pairs = sorted(pairs, reverse=True)
+            pairs = zip(neighbors, neighbors_idxs)
 
-        for n_sim, n_idx in sorted_pairs:
-            print(idx_to_cat[n_idx], n_sim)
+            sorted_pairs = sorted(pairs, reverse=True)
+
+            for n_sim, n_idx in sorted_pairs[:100]:
+                print(idx_to_cat[n_idx], n_sim)
+
+        print()
