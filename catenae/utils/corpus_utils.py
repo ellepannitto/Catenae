@@ -4,15 +4,15 @@ Set of utilities for reading Corpus.
 from typing import List
 
 def plain_conll_reader(filepath: str, min_len: int = 0, max_len: int = 300) -> List[str]:
-    """_summary_
+    """Read through CoNLL formatted file.
 
     Args:
-        filepath (str): _description_
-        min_len (int, optional): _description_. Defaults to 0.
-        max_len (int, optional): _description_. Defaults to 300.
+        filepath (str): path to input file
+        min_len (int, optional): Minimum length for sentence to be considered. Defaults to 0.
+        max_len (int, optional): Maximum length for sentence to be considered. Defaults to 300.
 
     Yields:
-        List[str]: _description_
+        List[str]: Sentence represented as list of strings, one for each token.
     """
     with open(filepath) as fin:
         sentence = []
@@ -37,13 +37,13 @@ def plain_conll_reader(filepath: str, min_len: int = 0, max_len: int = 300) -> L
 
 
 def get_linear(sentence: List[str]) -> str:
-    """_summary_
+    """Renders a sentence in linear format (list of its token forms).
 
     Args:
-        sentence (List[str]): _description_
+        sentence (List[str]): List of CoNLL tokens contained in sentence.
 
     Returns:
-        str: _description_
+        str: Linearized sentence (sequence of its token forms).
     """
     res = []
     for token in sentence:
