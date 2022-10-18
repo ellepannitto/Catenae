@@ -47,6 +47,7 @@ def recursive_C(A, tree_children, min_len_catena, max_len_catena):
 
 def process_sentence(sentence, freqdict, catdict, totalsdict,
                      min_len_catena, max_len_catena):
+    
     admitted_chars = string.ascii_letters+".-' "
 
     children = {}
@@ -366,6 +367,7 @@ def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold
             if len(catena) == 1:
                 print("{}\t{}\t{}".format("|".join(catena), freq, weight), file=fout_words)
 
+
 def extract_sentences(output_dir: str, input_dir: str, catenae_list: List[str]) -> None:
     """_summary_
 
@@ -385,9 +387,11 @@ def extract_sentences(output_dir: str, input_dir: str, catenae_list: List[str]) 
         
     input_files = glob.glob(input_dir+"/*")
     for input_file in tqdm.tqdm(input_files):
-        for sentence_no, sentence in tqdm.tqdm(enumerate(cutils.PlainCoNLLReader(input_file, 
-                                                                                 min_len=1, 
-                                                                                 max_len=25))):
+
+        sentences_it = tqdm.tqdm(enumerate(cutils.PlainCoNLLReader(input_file, min_len=1, max_len=25)))
+
+        for _, sentence in sentences_it:
+
             if sentence:
                 
                 freqdict = collections.defaultdict(int)
