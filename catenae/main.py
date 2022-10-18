@@ -1,4 +1,5 @@
-"""_summary_
+"""
+Entry point for package "catenae"
 """
 
 import argparse
@@ -17,13 +18,17 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    """_summary_
+    """Entry point for package "catenae"
+
+    The function deals with parsing arguments and dispatching them to the proper functions.
+
     """
 
     root_parser = argparse.ArgumentParser(prog='catenae', formatter_class=RawTextHelpFormatter)
     subparsers = root_parser.add_subparsers(title="actions", dest="actions")
 
-    # Compute stats on corpus
+    # Compute statistics on corpus
+    # Part-of-Speech statistics
     parser_pos_stats = subparsers.add_parser('pos-stats',
                                              description='compute list of stats for a corpus',
                                              help='compute list of stats for a corpus',
@@ -36,7 +41,7 @@ def main() -> None:
                                  help="Universal Part of Speech tag")
     parser_pos_stats.set_defaults(func=mutils.compute_pos_stats)
 
-
+    # Morphology statistics
     parser_morph_stats = subparsers.add_parser('morph-stats',
                                                description='compute list of stats for a corpus',
                                                help='compute list of stats for a corpus',
@@ -51,7 +56,7 @@ def main() -> None:
                                     help="Morphological trait values")
     parser_morph_stats.set_defaults(func=mutils.compute_morph_stats)
 
-
+    # Statistics on distribution of verb edges
     parser_verbedges_stats = subparsers.add_parser('verbedges-stats',
                                                    description='compute list of stats for a corpus',
                                                    help='compute list of stats for a corpus',
@@ -64,7 +69,7 @@ def main() -> None:
                                         help="Number of edges for verb")
     parser_verbedges_stats.set_defaults(func=mutils.compute_verbedges_stats)
 
-
+    # Statistics on distribution of subjects
     parser_sbj_stats = subparsers.add_parser('subj-stats',
                                              description='compute list of stats for a corpus',
                                              help='compute list of stats for a corpus',
@@ -75,7 +80,7 @@ def main() -> None:
                                   help="path to corpus directory")
     parser_sbj_stats.set_defaults(func=mutils.compute_sbj_stats)
 
-
+    # Statistics on distribution of syntactic relations
     parser_synrel_stats = subparsers.add_parser('synrel-stats',
                                                 description='compute list of stats for a corpus',
                                                 help='compute list of stats for a corpus',
@@ -89,7 +94,7 @@ def main() -> None:
     parser_synrel_stats.set_defaults(func=mutils.compute_synrel_stats)
 
     # Extraction of catenae
-    parser_extract = subparsers.add_parser('extract',
+    parser_extract = subparsers.add_parser('extract-catenae',
                                            description='extract list of catenae',
                                            help='extract list of catenae',
                                            formatter_class=ArgumentDefaultsHelpFormatter)
@@ -114,22 +119,22 @@ def main() -> None:
     parser_extract.set_defaults(func=mutils.extract_catenae)
 
     # Weight list of catenae
-    parser_weight = subparsers.add_parser('weight',
+    parser_weight = subparsers.add_parser('weight-catenae',
                                           description="compute weight function over catenae list",
                                           help="compute weight function over catenae list",
                                           formatter_class=ArgumentDefaultsHelpFormatter)
     parser_weight.add_argument("-o", "--output-dir", default="data/results/",
                                help="path to output dir")
 
-    requiredWeight = parser_weight.add_argument_group('required arguments')
-    requiredWeight.add_argument("-i", "--items-filepath", required=True)
-    requiredWeight.add_argument("-t", "--totals-filepath", required=True)
-    requiredWeight.add_argument("-c", "--catenae-filepath", required=True)
+    required_weight = parser_weight.add_argument_group('required arguments')
+    required_weight.add_argument("-i", "--items-filepath", required=True)
+    required_weight.add_argument("-t", "--totals-filepath", required=True)
+    required_weight.add_argument("-c", "--catenae-filepath", required=True)
 
     parser_weight.set_defaults(func=mutils.weight_catenae)
 
     # Extract list of accepted catenae
-    parser_filter = subparsers.add_parser("filter",
+    parser_filter = subparsers.add_parser("filter-catenae",
                                           description="filter weighted list",
                                           help="filter weighted list",
                                           formatter_class=ArgumentDefaultsHelpFormatter)
@@ -148,7 +153,7 @@ def main() -> None:
     parser_filter.set_defaults(func=mutils.filter_catenae)
 
     # Extract co-occurrences
-    parser_coocc = subparsers.add_parser('cooccurrences',
+    parser_coocc = subparsers.add_parser('extract-cooccurrences',
                                          description="extract co-occurrences of catenae",
                                          help="extract co-occurrences of catenae",
                                          formatter_class=ArgumentDefaultsHelpFormatter)
@@ -167,7 +172,8 @@ def main() -> None:
     parser_coocc.add_argument("-b", "--sentences-batch-size", type=int, default=100,
                               help="number of sentences in batch when extracting catenae")
     parser_coocc.add_argument("-f", "--frequency-threshold", type=int, default=1,
-                              help="frequency threshold applied in each batch for a catena to be kept")
+                              help="frequency threshold applied in each batch \
+                              for a catena to be kept")
     parser_coocc.add_argument("--min-len-catena", type=int, default=0,
                               help="minimium length for each catena to be kept")
     parser_coocc.add_argument("--max-len-catena", type=int, default=3,
@@ -209,7 +215,7 @@ def main() -> None:
     parser_sample.add_argument("--seed", type=int, default=42)
     parser_sample.set_defaults(func=mutils.sample_input)
 
-
+    # Parse input through UDPipe (using Universal Dependencies labels)
     parser_udparse = subparsers.add_parser("udparse",
                                            description="parse data with UD format",
                                            help="parse data with UD format",
@@ -222,7 +228,7 @@ def main() -> None:
                                 help="path to file containing model for udpipe lib")
     parser_udparse.set_defaults(func=mutils.udparse)
 
-
+    # Compute spearmanR correlation among lists of catenae
     parser_correlate = subparsers.add_parser("spearman",
                                             description="compute spearman correlation between \
                                             lists of catenae",
@@ -241,7 +247,8 @@ def main() -> None:
                                   help="list of filenames to be used as input")
     parser_correlate.set_defaults(func=mutils.correlate)
 
-
+    # Extract core catenae
+    # TODO: check!
     parser_corecatenae = subparsers.add_parser("corecatenae",
                                                description="compute stats about the core catenae \
                                                for group of speakers",
@@ -259,20 +266,20 @@ def main() -> None:
                                     help="threshold")
     parser_corecatenae.set_defaults(func=mutils.corecatenae)
 
+    # Extract sentences containing specific catenae
+    parser_extractsents = subparsers.add_parser("extract-sentences",
+                                                description="extract sentences containing catena",
+                                                help="extract sentences containing catena",
+                                                formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_extractsents.add_argument("-o", "--output-dir", default="data/output_sentences/",
+                                     help="path to output dir, default is data/output_sentences/")
+    parser_extractsents.add_argument("-i", "--input-dir", required=True,
+                                     help="directory containing parsed files to be used as input")
+    parser_extractsents.add_argument("-c", "--catenae-list", nargs="+",
+                                     help="list of catenae to look for")
+    parser_extractsents.set_defaults(func=mutils.extract_sentences)
 
-    parser_extractsentences = subparsers.add_parser("extract-sentences",
-                                                    description="extract sentences containing catena",
-                                                    help="extract sentences containing catena",
-                                                    formatter_class=ArgumentDefaultsHelpFormatter)
-    parser_extractsentences.add_argument("-o", "--output-dir", default="data/output_sentences/",
-                                         help="path to output dir, default is data/output_sentences/")
-    parser_extractsentences.add_argument("-i", "--input-dir", required=True,
-                                         help="directory containing parsed files to be used as input")
-    parser_extractsentences.add_argument("-c", "--catenae-list", nargs="+",
-                                         help="list of catenae to look for")
-    parser_extractsentences.set_defaults(func=mutils.extract_sentences)
-
-
+    # Compute similarity matrix for given DSM
     parser_simmatrix = subparsers.add_parser("similarity-matrix",
                                              description="compute full similarity matrix for dsm",
                                              help="compute full similarity matrix for dsm",
@@ -298,20 +305,22 @@ def main() -> None:
                                   help="number of dimensions to keep")
     parser_simmatrix.set_defaults(func=mutils.compute_simmatrix)
 
+    # Reduce similarity matrix to top-k neighbors
+    parser_reducematrix = subparsers.add_parser("reduce-simmatrix",
+                                                description="reduce simmatrix to top K neighbors",
+                                                help="reduce simmatrix to top K neighbors",
+                                                formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_reducematrix.add_argument("-o", "--output-dir",
+                                     default="data/output_reducedsimmatrix/",
+                                     help="path to output dir, \
+                                     default is data/output_reducedsimmatrix/")
+    parser_reducematrix.add_argument("--similarities-values", required=True, nargs="+",
+                                     help="paths to gzipped file containing cosine similarities")
+    parser_reducematrix.add_argument("-k", "--top-k", default=10_000, type=int,
+                                     help="number of dimensions to keep")
+    parser_reducematrix.set_defaults(func=mutils.reduce_simmatrix)
 
-    parser_reducesimmatrix = subparsers.add_parser("reduce-simmatrix",
-                                                   description="reduce simmatrix to top K neighbors",
-                                                   help="reduce simmatrix to top K neighbors",
-                                                   formatter_class=ArgumentDefaultsHelpFormatter)
-    parser_reducesimmatrix.add_argument("-o", "--output-dir", default="data/output_reducedsimmatrix/",
-                                        help="path to output dir, default is data/output_reducedsimmatrix/")
-    parser_reducesimmatrix.add_argument("--similarities-values", required=True, nargs="+",
-                                        help="paths to gzipped file containing cosine similarities")
-    parser_reducesimmatrix.add_argument("-k", "--top-k", default=10_000, type=int,
-                                        help="number of dimensions to keep")
-    parser_reducesimmatrix.set_defaults(func=mutils.reduce_simmatrix)
-
-
+    # Query nearest neighbors given a similarity matrix
     parser_queryneighbors = subparsers.add_parser("query-neighbors",
                                                   description="query nearest neighbors for catena",
                                                   help="query nearest neighbors for catena",
@@ -324,7 +333,7 @@ def main() -> None:
                                        help="path to file containing catena to index mapping")
     parser_queryneighbors.set_defaults(func=mutils.query_neighbors)
 
-
+    # Projects list of catenae on data
     parser_glass = subparsers.add_parser("glass",
                                          description="filters parsed file based on set of catenae",
                                          help="filters parsed file based on set of catenae",
@@ -336,6 +345,7 @@ def main() -> None:
     parser_glass.add_argument("-c", "--catenae", required=True,
                               help="path to file containing catenae")
     parser_glass.set_defaults(func=mutils.glass)
+
 
     args = root_parser.parse_args()
     if "func" not in args:
