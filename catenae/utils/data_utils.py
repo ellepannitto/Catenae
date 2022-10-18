@@ -1,8 +1,11 @@
+"""
+Set of utilities used to load and manipulated different kind of data used in the package.
+"""
 import itertools
 import gzip
 import tqdm
 
-from typing import Set, Any, Iterable, Tuple, Generator
+from typing import Set, Any, Iterable
 
 import numpy as np
 
@@ -57,9 +60,22 @@ def load_catenae_set(filepath: str, topk: int, catenae_set: Set = None) -> Set:
     return catenae
 
 
-def _generate_lines(input_path_vec:str, input_path_idx: str, 
+def _generate_lines(input_path_vec:str, input_path_idx: str,
                     vectors_to_load: set = None) ->  Iterable[str]:
-    
+    """_summary_
+
+    Args:
+        input_path_vec (str): _description_
+        input_path_idx (str): _description_
+        vectors_to_load (set, optional): _description_. Defaults to None.
+
+    Returns:
+        Iterable[str]: _description_
+
+    Yields:
+        Iterator[Iterable[str]]: _description_
+    """
+
     with gzip.open(input_path_vec, "rt") as fin_vec, \
         gzip.open(input_path_idx, "rt") as fin_idx:
 
@@ -71,8 +87,18 @@ def _generate_lines(input_path_vec:str, input_path_idx: str,
                 yield vec_line
 
 
-def load_vectors(input_path_vec: str, input_path_idx: str, 
+def load_vectors(input_path_vec: str, input_path_idx: str,
                  vectors_to_load: set = None) -> np.ndarray:
+    """_summary_
+
+    Args:
+        input_path_vec (str): _description_
+        input_path_idx (str): _description_
+        vectors_to_load (set, optional): _description_. Defaults to None.
+
+    Returns:
+        np.ndarray: _description_
+    """
 
     vectors = np.loadtxt(_generate_lines(input_path_vec, input_path_idx, vectors_to_load),
                          dtype=np.float32)
