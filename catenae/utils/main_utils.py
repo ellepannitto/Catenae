@@ -324,19 +324,6 @@ def query_neighbors(args: argparse.Namespace) -> None:
     dsm.query_neighbors(input_dsm_sim, input_dsm_idx, input_idx_map)
 
 
-def glass(args: argparse.Namespace) -> None:
-    """_summary_
-
-    Args:
-        args (argparse.Namespace): _description_
-    """
-    output_dir = futils.check_or_create_dir(args.output_dir)
-    input_filename = args.input
-    catenae_path = args.catenae
-
-    glassify.filter(output_dir, input_filename, catenae_path)
-
-
 def reduce_simmatrix(args: argparse.Namespace) -> None:
     """_summary_
 
@@ -349,3 +336,17 @@ def reduce_simmatrix(args: argparse.Namespace) -> None:
     top_k = args.top_k
 
     dsm.reduce(output_dir, similarities_values, top_k)
+
+
+def glass(args: argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): _description_
+    """
+    output_dir = futils.check_or_create_dir(args.output_dir)
+    input_filename = args.input
+    catenae_path = args.catenae
+
+    glassify.filter(output_dir, input_filename, catenae_path, min_len_catena=1, max_len_catena=5)
+
