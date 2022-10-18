@@ -1,7 +1,5 @@
-"""_summary_
-
-Returns:
-    _type_: _description_
+"""
+Set of utilities for interacting with files and directories.
 """
 import os
 import glob
@@ -9,20 +7,20 @@ import logging
 
 from pathlib import Path
 
-from typing import List
+from typing import Iterable
 
 
 logger = logging.getLogger(__name__)
 
 
-def get_filenames(input_dir: str) -> List[str]:
-    """_summary_
+def get_filenames(input_dir: str) -> Iterable[str]:
+    """Returns paths to files contained in directory.
 
     Args:
-        input_dir (str): _description_
+        input_dir (str): List of paths to directories.
 
     Returns:
-        List[str]: _description_
+        Iterable[str]: List of paths to files contained in directories.
     """
 
     if os.path.isdir(input_dir):
@@ -32,21 +30,21 @@ def get_filenames(input_dir: str) -> List[str]:
 
 
 def check_or_create_dir(path: str) -> Path:
-    """_summary_
+    """Check if a directory exists already. If not, create the directory.
 
     Args:
-        path (str): _description_
+        path (str): path to directory.
 
     Returns:
-        Path: _description_
+        Path: Path object to directory (either existent or newly created).
     """
-    
-    p = Path(path)
 
-    if not p.exists():
+    path = Path(path)
+
+    if not path.exists():
         logger.info("Creating folder %s", path)
-        p.mkdir(parents=True)
+        path.mkdir(parents=True)
     else:
         logger.info("Checked path: %s", path)
 
-    return p
+    return path
