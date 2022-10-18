@@ -1,4 +1,5 @@
-"""_summary_
+"""
+Functions to dispatch parameters to functions.
 """
 
 import argparse
@@ -19,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 
 def compute_pos_stats(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for Part-of-Speech statistics.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -33,10 +34,10 @@ def compute_pos_stats(args: argparse.Namespace) -> None:
 
 
 def compute_morph_stats(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for morphology statistics.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -47,27 +48,11 @@ def compute_morph_stats(args: argparse.Namespace) -> None:
     stats.compute_morph_distribution(output_dir, corpus_dir, trait, values_list)
 
 
-# def compute_mood_stats(args):
-#     output_dir = args.output_dir
-#     corpus_dir = args.corpus_dirpath
-#     mood_list = args.mood
-#
-#     stats.compute_mood_distribution(output_dir, corpus_dir, mood_list)
-#
-#
-# def compute_form_stats(args):
-#     output_dir = args.output_dir
-#     corpus_dir = args.corpus_dirpath
-#     form_list = args.form
-#
-#     stats.compute_tense_distribution(output_dir, corpus_dir, form_list)
-
-
 def compute_verbedges_stats(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for statistics on verb edges.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -78,10 +63,10 @@ def compute_verbedges_stats(args: argparse.Namespace) -> None:
 
 
 def compute_sbj_stats(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for statistics on distribution of subjects.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -91,10 +76,10 @@ def compute_sbj_stats(args: argparse.Namespace) -> None:
 
 
 def compute_synrel_stats(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for statistics on syntactic relations.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -105,10 +90,10 @@ def compute_synrel_stats(args: argparse.Namespace) -> None:
 
 
 def extract_catenae(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for extracting catenae.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -128,10 +113,10 @@ def extract_catenae(args: argparse.Namespace) -> None:
 
 
 def weight_catenae(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for weighting catenae.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -145,10 +130,10 @@ def weight_catenae(args: argparse.Namespace) -> None:
 
 
 def filter_catenae(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for filtering catenae.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -164,10 +149,10 @@ def filter_catenae(args: argparse.Namespace) -> None:
 
 
 def extract_cooccurrences(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for extracting co-occurrences.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -193,10 +178,10 @@ def extract_cooccurrences(args: argparse.Namespace) -> None:
 
 
 def build_dsm(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for building distributional semantic model.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     # TODO: add parameter for dimensions
@@ -204,16 +189,16 @@ def build_dsm(args: argparse.Namespace) -> None:
     output_dir = futils.check_or_create_dir(args.output_dir)
     cooccurrences_filepath = args.cooccurrences_filepath
     frequences_filepath = args.frequences_filepath
-    TOT = args.total
+    tot_frequency = args.total
 
-    dsm.build(output_dir, cooccurrences_filepath, frequences_filepath, TOT)
+    dsm.build(output_dir, cooccurrences_filepath, frequences_filepath, tot_frequency)
 
 
 def sample_input(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for sampling input data.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -225,10 +210,10 @@ def sample_input(args: argparse.Namespace) -> None:
 
 
 def udparse(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for parsing input data.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -239,26 +224,26 @@ def udparse(args: argparse.Namespace) -> None:
 
 
 def correlate(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for computing Spearman correlation.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
     filenames_list = args.files_list
     topk = args.top_k
-    mi = args.mi_threshold
+    mutual_information = args.mi_threshold
     frequency = args.frequency_threshold
 
-    analysis.correlate(output_dir, filenames_list, topk, mi, frequency)
+    analysis.correlate(output_dir, filenames_list, topk, mutual_information, frequency)
 
 
 def corecatenae(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for extracting core catenae.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -270,10 +255,10 @@ def corecatenae(args: argparse.Namespace) -> None:
 
 
 def extract_sentences(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for extracting sentences containing specific catenae.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -284,10 +269,10 @@ def extract_sentences(args: argparse.Namespace) -> None:
 
 
 def compute_simmatrix(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for computing matrix of similarities between vectors.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -312,10 +297,10 @@ def compute_simmatrix(args: argparse.Namespace) -> None:
 
 
 def query_neighbors(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for querying nearest neighbors.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
     input_dsm_sim = args.similarities_matrix
     input_dsm_idx = args.indexes_matrix
@@ -325,10 +310,10 @@ def query_neighbors(args: argparse.Namespace) -> None:
 
 
 def reduce_simmatrix(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for reduding matrix of similarities.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
@@ -339,14 +324,13 @@ def reduce_simmatrix(args: argparse.Namespace) -> None:
 
 
 def glass(args: argparse.Namespace) -> None:
-    """_summary_
+    """Dispatch parameters for projecting catenae on data.
 
     Args:
-        args (argparse.Namespace): _description_
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
     input_filename = args.input
     catenae_path = args.catenae
 
     glassify.filter(output_dir, input_filename, catenae_path, min_len_catena=1, max_len_catena=5)
-
