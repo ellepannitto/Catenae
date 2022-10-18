@@ -9,6 +9,7 @@ from catenae.core import extraction
 from catenae.core import dsm
 from catenae.core import corpus
 from catenae.core import analysis
+from catenae.core import glassify
 
 from catenae.core import statistics as stats
 from catenae.utils import files_utils as futils
@@ -333,7 +334,7 @@ def glass(args: argparse.Namespace) -> None:
     input_filename = args.input
     catenae_path = args.catenae
 
-    
+    glassify.filter(output_dir, input_filename, catenae_path)
 
 
 def reduce_simmatrix(args: argparse.Namespace) -> None:
