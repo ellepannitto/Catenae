@@ -36,6 +36,7 @@ def main() -> None:
                                  help="Universal Part of Speech tag")
     parser_pos_stats.set_defaults(func=mutils.compute_pos_stats)
 
+
     parser_morph_stats = subparsers.add_parser('morph-stats',
                                                description='compute list of stats for a corpus',
                                                help='compute list of stats for a corpus',
@@ -50,6 +51,7 @@ def main() -> None:
                                     help="Morphological trait values")
     parser_morph_stats.set_defaults(func=mutils.compute_morph_stats)
 
+   
     parser_verbedges_stats = subparsers.add_parser('verbedges-stats',
                                                    description='compute list of stats for a corpus',
                                                    help='compute list of stats for a corpus',
@@ -62,6 +64,7 @@ def main() -> None:
                                         help="Number of edges for verb")
     parser_verbedges_stats.set_defaults(func=mutils.compute_verbedges_stats)
 
+
     parser_sbj_stats = subparsers.add_parser('subj-stats',
                                              description='compute list of stats for a corpus',
                                              help='compute list of stats for a corpus',
@@ -71,6 +74,7 @@ def main() -> None:
     parser_sbj_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
                                   help="path to corpus directory")
     parser_sbj_stats.set_defaults(func=mutils.compute_sbj_stats)
+
 
     parser_synrel_stats = subparsers.add_parser('synrel-stats',
                                                 description='compute list of stats for a corpus',
