@@ -29,7 +29,7 @@ def main() -> None:
                                              help='compute list of stats for a corpus',
                                              formatter_class=ArgumentDefaultsHelpFormatter)
     parser_pos_stats.add_argument("-o", "--output-dir", default="data/stats/",
-                                 help="path to output dir")                                
+                                 help="path to output dir")
     parser_pos_stats.add_argument("-c", "--corpus-dirpath", default="data/corpus/",
                                  help="path to corpus directory")
     parser_pos_stats.add_argument("-p", "--pos", required=True, nargs="+",
@@ -51,7 +51,7 @@ def main() -> None:
                                     help="Morphological trait values")
     parser_morph_stats.set_defaults(func=mutils.compute_morph_stats)
 
-   
+
     parser_verbedges_stats = subparsers.add_parser('verbedges-stats',
                                                    description='compute list of stats for a corpus',
                                                    help='compute list of stats for a corpus',
@@ -104,11 +104,13 @@ def main() -> None:
     parser_extract.add_argument("-b", "--sentences-batch-size", type=int, default=100,
                                 help="number of sentences in batch when extracting catenae")
     parser_extract.add_argument("-f", "--frequency-threshold", type=int, default=1,
-                                help="frequency threshold applied in each batch for a catena to be kept")
+                                help="frequency threshold applied in each batch for \
+                                a catena to be kept")
     parser_extract.add_argument("--min-len-catena", type=int, default=0,
                                 help="minimium length for each catena to be kept")
     parser_extract.add_argument("--max-len-catena", type=int, default=5,
-                                help="maximum length for each catena to be kept. WARNING: highly impacts ram usage")
+                                help="maximum length for each catena to be kept. \
+                                    WARNING: highly impacts ram usage")
     parser_extract.set_defaults(func=mutils.extract_catenae)
 
     # Weight list of catenae
@@ -169,11 +171,13 @@ def main() -> None:
     parser_coocc.add_argument("--min-len-catena", type=int, default=0,
                               help="minimium length for each catena to be kept")
     parser_coocc.add_argument("--max-len-catena", type=int, default=3,
-                              help="maximum length for each catena to be kept. WARNING: highly impacts ram usage")
+                              help="maximum length for each catena to be kept.\
+                              WARNING: highly impacts ram usage")
     parser_coocc.add_argument("--include-len-one-items", action='store_true',
                               help="include words regardless of their frequency and weight values")
     parser_coocc.add_argument("--words-filepath",
-                              help="filepath to words list, to include if len one items are required")
+                              help="filepath to words list, to include if items \
+                              of length one are required")
     parser_coocc.set_defaults(func=mutils.extract_cooccurrences)
 
     # Build DSM
@@ -183,11 +187,11 @@ def main() -> None:
                                        formatter_class=ArgumentDefaultsHelpFormatter)
     parser_dsm.add_argument("-o", "--output-dir", default="data/results/",
                             help="path to output dir, default is data/results/")
-    parser_dsm.add_argument("-c", "--cooccurrences-filepath", 
+    parser_dsm.add_argument("-c", "--cooccurrences-filepath",
                             help="path to cooccurrences file", required=True)
-    parser_dsm.add_argument("-f", "--frequences-filepath", 
+    parser_dsm.add_argument("-f", "--frequences-filepath",
                             help="path to frequencies file", required=True)
-    parser_dsm.add_argument("-t", "--total", type=int, 
+    parser_dsm.add_argument("-t", "--total", type=int,
                             help="sum of frequencies", required=True)
     parser_dsm.set_defaults(func=mutils.build_dsm)
 
@@ -215,13 +219,15 @@ def main() -> None:
     parser_udparse.add_argument("-i", "--input-dir", default="data/input/",
                                help="path to output dir, default is data/input/")
     parser_udparse.add_argument("-m", "--model", required=True,
-                                help="path to file containing model for udpipe lib")    
-    parser_udparse.set_defaults(func=mutils.udparse)                       
+                                help="path to file containing model for udpipe lib")
+    parser_udparse.set_defaults(func=mutils.udparse)
 
 
     parser_correlate = subparsers.add_parser("spearman",
-                                            description="compute spearman correlation between lists of catenae",
-                                            help="compute spearman correlation between lists of catenae",
+                                            description="compute spearman correlation between \
+                                            lists of catenae",
+                                            help="compute spearman correlation between \
+                                            lists of catenae",
                                             formatter_class=ArgumentDefaultsHelpFormatter)
     parser_correlate.add_argument("-o", "--output-dir", default="data/output_correlations/",
                                   help="path to output dir, default is data/output_correlations/")
@@ -237,20 +243,23 @@ def main() -> None:
 
 
     parser_corecatenae = subparsers.add_parser("corecatenae",
-                                               description="compute stats about the core catenae for group of speakers",
-                                               help="compute stats about the core catenae for group of speakers",
+                                               description="compute stats about the core catenae \
+                                               for group of speakers",
+                                               help="compute stats about the core catenae for \
+                                               group of speakers",
                                                formatter_class=ArgumentDefaultsHelpFormatter)
     parser_corecatenae.add_argument("-o", "--output-dir", default="data/output_corecatenae/",
                                     help="path to output dir, default is data/output_corecatenae/")
     parser_corecatenae.add_argument("-i", "--input-files-list", required=True, nargs="+",
                                     help="list of filenames to be used as input")
     parser_corecatenae.add_argument("-b", "--babbling-files-list", required=True, nargs="+",
-                                    help="list of filenames produced in the babbling phase to be used as input")
+                                    help="list of filenames produced in the babbling phase to be \
+                                    used as input")
     parser_corecatenae.add_argument("-k", "--top-k", type=int, default=10_000,
                                     help="threshold")
     parser_corecatenae.set_defaults(func=mutils.corecatenae)
-    
-    
+
+
     parser_extractsentences = subparsers.add_parser("extract-sentences",
                                                     description="extract sentences containing catena",
                                                     help="extract sentences containing catena",
@@ -283,7 +292,8 @@ def main() -> None:
     parser_simmatrix.add_argument("--working-memory", default=16_000, type=int,
                                   help="Working memory (MiB) for pairwise computation")
     parser_simmatrix.add_argument("--reduced", action="store_true",
-                                  help="set to True for reduced version, disk-memory efficient. ONLY WORKS WITH CHUNKED VERSION")
+                                  help="set to True for reduced version, disk-memory efficient.\
+                                  ONLY WORKS WITH CHUNKED VERSION")
     parser_simmatrix.add_argument("-k", "--top-k", default=10_000, type=int,
                                   help="number of dimensions to keep")
     parser_simmatrix.set_defaults(func=mutils.compute_simmatrix)
