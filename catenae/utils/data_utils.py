@@ -3,15 +3,16 @@ Set of utilities used to load and manipulated different kind of data used in the
 """
 import itertools
 import gzip
-import tqdm
 
 from typing import Set, Any, Iterable
 
+import tqdm
 import numpy as np
 
 from FileMerger.filesmerger import utils as fmergerutils
 
-def grouper(iterable: Iterable[Any], n: int, fillvalue: Any = None) -> Iterable:
+
+def grouper(iterable: Iterable[Any], n: int, fillvalue: Any = None) -> Iterable: # pylint:disable=C0103
     """Collect data into fixed-length chunks or blocks.
 
     grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
@@ -30,7 +31,7 @@ def grouper(iterable: Iterable[Any], n: int, fillvalue: Any = None) -> Iterable:
 
 
 def load_catenae_set(filepath: str, topk: int, catenae_set: Set = None) -> Set:
-    """Loads first topk catenae into a set.
+    """Load first topk catenae into a set.
 
     Args:
         filepath (str): _description_

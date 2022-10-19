@@ -24,6 +24,7 @@ class FrozenDict(dict):
 
     def __setitem__(self, key, value):
         """Set method used for testing."""
+
         raise InvalidMethodError('Cannot assign value to a FrozenDict')
 
 
@@ -34,6 +35,7 @@ class ImmutableConfig(FrozenDict):
 
     def __init__(self, config):
         """Constructor."""
+
         if not isinstance(config, dict):
             raise InvalidParameterError(
                 'ImmutableConfig requires instance of dict as input parameter')
