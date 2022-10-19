@@ -8,11 +8,13 @@ import gzip
 import math
 import tqdm
 
+from pathlib import Path
 from typing import List
 
 from catenae.utils import files_utils as futils
 from catenae.utils import data_utils as dutils
 from catenae.utils import corpus_utils as cutils
+from catenae.utils import catenae_utils as catutils
 
 from FileMerger.filesmerger import core as fmerger
 
@@ -20,35 +22,8 @@ from FileMerger.filesmerger import core as fmerger
 logger = logging.getLogger(__name__)
 
 
-def recursive_C(A, tree_children, min_len_catena, max_len_catena):
-    # if A is a leaf
-    if A not in tree_children:
-        return [[A]], [[A]]
-        # return [[A]], []
-
-    else:
-        found_catenae = []
-        list_of_indep_catenae = [[[A]]]
-
-        for a_child in tree_children[A]:
-            c, all_c = recursive_C(a_child, tree_children, min_len_catena, max_len_catena)
-
-            found_catenae += all_c
-            list_of_indep_catenae.append([[None]] + c)
-
-        X = []
-        for tup in itertools.product(*list_of_indep_catenae):
-            new_catena = list(sorted(filter(lambda x: x is not None, sum(tup, []))))
-            if min_len_catena <= len(new_catena) <= max_len_catena:
-                X.append(new_catena)
-
-        return X, X+found_catenae
-
-
 def process_sentence(sentence, freqdict, catdict, totalsdict,
                      min_len_catena, max_len_catena):
-    
-    admitted_chars = string.ascii_letters+".-' "
 
     children = {}
     tokens = {}
@@ -59,12 +34,12 @@ def process_sentence(sentence, freqdict, catdict, totalsdict,
     for token in sentence:
         token = token.split("\t")
 
-        position, word, lemma, pos, _, morph, head, rel, _, _ = token
-        if not pos == 'PUNCT' and rel not in ["discourse", "fixed", "flat", "comound", "list", "parataxis",
-                                              "orphan", "goeswith", "reparandum", "punct", "dep"]:
+        position, word, _, pos, _, _, head, rel, _, _ = token
+        if catutils.pos_admitted(pos) and catutils.rel_admitted(rel):
+
             position = int(position)
 
-            if not all(c in admitted_chars for c in word):
+            if not catutils.word_admitted(word):
                 tokens_to_remove.append(position)
 
             head = int(head)
@@ -83,7 +58,7 @@ def process_sentence(sentence, freqdict, catdict, totalsdict,
 
     if 0 in children:
         root = children[0][0]
-        _, catenae = recursive_C(root, children, min_len_catena, max_len_catena)
+        _, catenae = catutils.recursive_catenae_extraction(root, children, min_len_catena, max_len_catena)
 
         for catena in catenae:
             if all(x not in tokens_to_remove for x in catena):
@@ -94,7 +69,7 @@ def process_sentence(sentence, freqdict, catdict, totalsdict,
 
                 temp = [(0, 1, 2)] * len(catena)
                 X = list(itertools.product(*temp))
-                
+
                 for c in X:
                     cat = []
                     for i, el in enumerate(c):
@@ -119,11 +94,10 @@ def process_cooccurrences(sentence, coocc_dict, catenae_freq,
     for token in sentence:
         token = token.split("\t")
         position, word, lemma, pos, _, morph, head, rel, _, _ = token
-        if not pos == "PUNCT" and not rel in ["discourse", "fixed", "flat", "comound", "list", "parataxis",
-                                              "orphan", "goeswith", "reparandum", "punct", "dep", "mark"]:
+        if catutils.pos_admitted(pos) and catutils.rel_admitted(rel):
             position = int(position)
 
-            if not all(c in admitted_chars for c in word):
+            if not catutils.word_admitted(word):
                 tokens_to_remove.append(position)
 
             head = int(head)
@@ -137,7 +111,8 @@ def process_cooccurrences(sentence, coocc_dict, catenae_freq,
 
     if 0 in children:
         root = children[0][0]
-        _, catenae = recursive_C(root, children, min_len_catena, max_len_catena)
+        _, catenae = catutils.recursive_catenae_extraction(root, children,
+                                                           min_len_catena, max_len_catena)
 
         explicit_catenae = []
 
@@ -184,7 +159,8 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k
 
     for filename in filenames:
         logger.info("Processing file {}".format(filename))
-        iterator = dutils.grouper(cutils.PlainCoNLLReader(filename, min_len_sentence, max_len_sentence),
+        iterator = dutils.grouper(cutils.plain_conll_reader(filename, min_len_sentence,
+                                                            max_len_sentence),
                                   sentences_batch_size)
 
         for batch_no, batch in enumerate(iterator):
@@ -227,7 +203,7 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k
                                         delete_input=True)
 
     with open(output_dir + "/totals-freqs.txt", "wt") as fout_total:
-        print("TOTAL\t{}".format(total_freqs_global), file=fout_total)
+        print(f"TOTAL\t{total_freqs_global}", file=fout_total)
 
 
 def extract_catenae(output_dir, input_dir,
@@ -238,12 +214,13 @@ def extract_catenae(output_dir, input_dir,
     filenames = futils.get_filenames(input_dir)
 
     for filename in filenames:
-        logger.info("Processing file {}".format(filename))
-        iterator = dutils.grouper(cutils.PlainCoNLLReader(filename, min_len_sentence, max_len_sentence),
+        logger.info("Processing file %s", filename)
+        iterator = dutils.grouper(cutils.plain_conll_reader(filename, min_len_sentence,
+                                                            max_len_sentence),
                                   sentences_batch_size)
 
         for batch_no, batch in enumerate(iterator):
-            logger.info("Processing batch n. {}".format(batch_no))
+            logger.info("Processing batch n. %d", batch_no)
             freqdict = collections.defaultdict(int)
             catdict = collections.defaultdict(int)
             totalsdict = collections.defaultdict(int)
@@ -251,7 +228,7 @@ def extract_catenae(output_dir, input_dir,
             for sentence_no, sentence in enumerate(batch):
                 if sentence:
                     if not sentence_no % 100:
-                        logger.info("{} - {}".format(sentence_no, len(sentence)))
+                        logger.info("%d - %d", sentence_no, len(sentence))
                     process_sentence(sentence, freqdict, catdict, totalsdict,
                                      min_len_catena, max_len_catena)
 
@@ -347,8 +324,10 @@ def weight_catenae(output_dir, items_filepath, totals_filepath, catenae_filepath
 def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold,
                               min_len_catena, max_len_catena):
 
-    with gzip.open(input_file, "rt") as fin, open(output_dir+"/catenae-filtered.txt", "w") as fout, \
-         open(output_dir+"/catenae-lenone.txt", "w") as fout_words:
+    with gzip.open(input_file, "rt") as fin, \
+        open(output_dir.joinpath("catenae-filtered.txt"), "w") as fout, \
+        open(output_dir.joinpath("catenae-lenone.txt"), "w") as fout_words:
+
         print(fin.readline().strip(), file=fout)
         print(fin.readline().strip(), file=fout_words)
         for line in fin:
@@ -368,7 +347,7 @@ def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold
                 print("{}\t{}\t{}".format("|".join(catena), freq, weight), file=fout_words)
 
 
-def extract_sentences(output_dir: str, input_dir: str, catenae_list: List[str]) -> None:
+def extract_sentences(output_dir: Path, input_dir: str, catenae_list: List[str]) -> None:
     """_summary_
 
     Args:
@@ -376,33 +355,34 @@ def extract_sentences(output_dir: str, input_dir: str, catenae_list: List[str]) 
         input_file (str): _description_
         catenae_list (list[str]): _description_
     """
-    
+
     fout_list_sents = {}
     fout_list_cats = {}
-    
+
     for catena in catenae_list:
         catena_split = catena.split("|")
-        fout_list_sents[catena] = open(output_dir+"/"+" ".join(catena_split)+".sentences", "w")
-        fout_list_cats[catena] = open(output_dir+"/"+" ".join(catena_split)+".cat", "w")
-        
+        fout_list_sents[catena] = open(output_dir.joinpath(" ".join(catena_split)+".sentences"), "w") # pylint:disable=line-too-long
+        fout_list_cats[catena] = open(output_dir.joinpath(" ".join(catena_split)+".cat"), "w")
+
     input_files = glob.glob(input_dir+"/*")
     for input_file in tqdm.tqdm(input_files):
 
-        sentences_it = tqdm.tqdm(enumerate(cutils.PlainCoNLLReader(input_file, min_len=1, max_len=25)))
+        sentences_it = tqdm.tqdm(enumerate(cutils.plain_conll_reader(input_file,
+                                                                     min_len=1, max_len=25)))
 
         for _, sentence in sentences_it:
 
             if sentence:
-                
+
                 freqdict = collections.defaultdict(int)
                 catdict = collections.defaultdict(int)
-                totalsdict = collections.defaultdict(int)    
+                totalsdict = collections.defaultdict(int)
 
                 process_sentence(sentence, freqdict, catdict, totalsdict,
                                     min_len_catena=0, max_len_catena=5)
 
                 catenae = catdict.keys()
-                
+
                 for catena in catenae_list:
                     if catena in catenae:
                         print("\n".join(sentence)+"\n", file=fout_list_sents[catena])

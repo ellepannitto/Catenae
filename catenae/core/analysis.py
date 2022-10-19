@@ -1,16 +1,18 @@
 import logging
 import collections
 import gzip
-import tqdm
 
+from pathlib import Path
 from typing import List
+
+import tqdm
 
 from scipy.stats.mstats import spearmanr
 
 logger = logging.getLogger(__name__)
 
 
-def correlate(output_dir: str, filenames_list: List[str], 
+def correlate(output_dir: Path, filenames_list: List[str],
               topk: int, mi_threshold: int, fr_threshold: int) -> None:
     """_summary_
 
@@ -31,7 +33,7 @@ def correlate(output_dir: str, filenames_list: List[str],
 
             first_mi = 100
             line = fin.readline()
-            
+
             for line in fin:
                 linesplit = line.strip().split("\t")
                 catena = linesplit[0].lower()
@@ -49,7 +51,7 @@ def correlate(output_dir: str, filenames_list: List[str],
 
         logger.info("Catenae in {}: {}".format(filename, len(catdict_lists[filename])))
 
-        with gzip.open(output_dir+f"/{basename}.TOP{topk}", "wt") as fout:
+        with gzip.open(output_dir.joinpath(f"{basename}.TOP{topk}"), "wt") as fout:
             for catena, mi in catdict_lists[filename][:topk]:
                 print(f"{catena}\t{mi}", file=fout)
 
@@ -60,7 +62,7 @@ def correlate(output_dir: str, filenames_list: List[str],
     zeros = {}
     vectors = {}
 
-    with open(output_dir+f"/spearmanr-TOP{topk}.txt", "w") as fout:
+    with open(output_dir.joinpath("/spearmanr-TOP{topk}.txt"), "w") as fout:
         for filename in catdict:
 
             stats[filename] = collections.defaultdict(lambda: -1.0)
@@ -89,14 +91,14 @@ def correlate(output_dir: str, filenames_list: List[str],
                 s, p_s = spearmanr(vectors[filename], vectors[filename2])
                 stats[filename][filename2] = s
                 p_values[filename][filename2] = p_s
-    
+
         for filename in stats:
             for filename2 in stats[filename]:
                 s, p_s = stats[filename][filename2], p_values[filename][filename2]
                 print("{}\t{}\t{}\t{}".format(filename, filename2, s, p_s), file=fout)
 
 
-def corecatenae(output_dir: str, input_filenames_list: List[str], 
+def corecatenae(output_dir: Path, input_filenames_list: List[str],
                 babbling_filenames_list: List[str], topk: int) -> None:
     """_summary_
 
@@ -118,7 +120,7 @@ def corecatenae(output_dir: str, input_filenames_list: List[str],
             fin.readline()
 
             i=0
-            
+
             for line in tqdm.tqdm(fin):
                 line = line.strip().split("\t")
 
@@ -154,7 +156,7 @@ def corecatenae(output_dir: str, input_filenames_list: List[str],
                     inputs[catena][file_idx] = frequency
 
 
-    with open(output_dir+"/babblingstats.tsv", "w") as fout:
+    with open(output_dir.joinpath("babblingstats.tsv"), "w") as fout:
         s = "catena\t"
         l = ["input_freq_"+str(i).zfill(2) for i in range(1,11)]
         s+= "\t".join(l)+"\t"
@@ -175,12 +177,12 @@ def corecatenae(output_dir: str, input_filenames_list: List[str],
 
             for i, mi in enumerate(babblings[catena]):
                 lst.append(str(mi))
-            
+
             for i, rank in enumerate(ranks[catena]):
                 lst.append(str(rank))
 
             print("\t".join(lst), file=fout)
-            
+
             # print("\t".join(str(x) for x in lst))
             # print(babblings[catena])
             # print(inputs[catena])

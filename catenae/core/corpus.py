@@ -23,7 +23,7 @@ def reservoir_tokens_number(files, size, seed=42):
     for filename in files:
         logger.info("reading file {}".format(filename))
 
-        for sentence in cutils.PlainCoNLLReader(filename):
+        for sentence in cutils.plain_conll_reader(filename):
 
             sentence_number += 1
             considered_tokens += len(sentence)
@@ -47,7 +47,7 @@ def reservoir_tokens_number(files, size, seed=42):
 
 
 def sample(output_dir, input_dir, size, seed):
-    
+
     input_files = glob.glob(input_dir+"/*")
     random.Random(seed).shuffle(input_files)
 
@@ -56,13 +56,13 @@ def sample(output_dir, input_dir, size, seed):
     training_files, valid_files, test_files = input_files[:int(L*0.8)], \
                                               input_files[int(L*0.8):int(L*0.9)], \
                                               input_files[int(L*0.9):]
-    
+
     training_size = int(size)
     valid_size, test_size = int(size*0.1), int(size*0.1)
 
     logger.info("Setting training size to {}, valid size to {} and test size to \
                 {} words".format(training_size, valid_size, test_size))
-    
+
     sentences_for_training = reservoir_tokens_number(training_files, training_size)
     sentences_for_valid = reservoir_tokens_number(valid_files, valid_size)
     sentences_for_test = reservoir_tokens_number(test_files, test_size)
@@ -84,8 +84,8 @@ def print_to_file(sentences_idxs, files, output_path, str):
         for filename in files:
 
             logger.info("reading file {}...".format(filename))
-            
-            for sentence in cutils.PlainCoNLLReader(filename):
+
+            for sentence in cutils.plain_conll_reader(filename):
                 sentence_number += 1
 
                 if index < len(sentences_idxs) and sentence_number == sentences_idxs[index]:
@@ -111,11 +111,12 @@ def parse(output_dir, input_dir, model_path):
     for filename in os.listdir(input_dir):
         basename = filename.split(".")[0]
 
-        logger.info("processing file {}/{}".format(input_dir, filename))
+        logger.info("processing file %s/%s", input_dir, filename)
 
-        with open(input_dir+filename) as fin, open(output_dir+"/{}.conllu".format(basename), "w") as fout:    
+        with open(input_dir+filename) as fin, \
+            open(output_dir.joinpath(f"{basename}.conllu"), "w") as fout:
             text = ''.join(fin.readlines())
-        
+
             # Process data
             processed = pipeline.process(text, error)
             if error.occurred():

@@ -5,6 +5,7 @@ import math
 import tqdm
 
 from typing import List
+from pathlib import Path
 
 import numpy as np
 import scipy as sp
@@ -111,7 +112,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
             el_no += 1
 
 
-def compute_simmatrix_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx: str, 
+def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
                               left_subset_path: str, right_subset_path: str,
                               working_memory: int) -> None:
     """_summary_
@@ -132,7 +133,7 @@ def compute_simmatrix_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx
     right_vectors_to_load = set()
     if not right_subset_path == "all":
         right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
-    
+
     vectors_to_load = None
     if len(left_vectors_to_load) and len(right_vectors_to_load):
         vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
@@ -143,8 +144,8 @@ def compute_simmatrix_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx
     logger.info("Computing pairwise distances chunked...")
     simmatrix = metrics.pairwise_distances_chunked(DSM, metric="cosine", working_memory=working_memory)
 
-    similarities_fname = output_dir+"simmatrix.sim"
-    
+    similarities_fname = output_dir.joinpath("simmatrix.sim")
+
     it = tqdm.tqdm(enumerate(simmatrix))
     for chunk_no, chunk in it:
 
@@ -162,7 +163,7 @@ def compute_simmatrix_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx
         np.save(npy_similarities_fname, chunk)
 
 
-def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, input_dsm_idx: str, 
+def compute_simmatrix_and_reduce_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
                                          left_subset_path: str, right_subset_path: str,
                                          working_memory: int, top_k: int) -> None:
 
@@ -173,7 +174,7 @@ def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, in
     right_vectors_to_load = set()
     if not right_subset_path == "all":
         right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
-    
+
     vectors_to_load = None
     if len(left_vectors_to_load) and len(right_vectors_to_load):
         vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
@@ -182,7 +183,7 @@ def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, in
     DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
 
     logger.info("Computing pairwise distances chunked...")
-    simmatrix = metrics.pairwise_distances_chunked(DSM, metric="cosine", 
+    simmatrix = metrics.pairwise_distances_chunked(DSM, metric="cosine",
                                                    working_memory=working_memory,
                                                    n_jobs=-1)
 
@@ -193,7 +194,7 @@ def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, in
 
     it = tqdm.tqdm(enumerate(simmatrix))
     for chunk_no, chunk in it:
-        
+
         chunk_no = str(chunk_no).zfill(2)
         it.set_description(f"Processing chunk {chunk_no}...")
 
@@ -210,7 +211,7 @@ def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, in
         ones = np.ones(chunk.shape)
         chunk = chunk - ones
         chunk = -chunk
-        
+
         logger.info("Argpartition...")
         idxs = np.argpartition(-chunk, top_k)
 
@@ -226,11 +227,11 @@ def compute_simmatrix_and_reduce_chunked(output_dir: str, input_dsm_vec: str, in
             idxs_topk = np.vstack((idxs_topk, idxs[:, :top_k]))
 
     logger.info("Saving vectors...")
-    np.save(output_dir+"catenae-dsm-red.sim.npy", matrix_topk)
-    np.save(output_dir+"catenae-dsm-red.idxs.npy", idxs_topk)
+    np.save(output_dir.joinpath("catenae-dsm-red.sim.npy"), matrix_topk)
+    np.save(output_dir.joinpath("catenae-dsm-red.idxs.npy"), idxs_topk)
 
 
-def compute_simmatrix(output_dir: str, input_dsm_vec: str, input_dsm_idx: str, 
+def compute_simmatrix(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
                       left_subset_path: str, right_subset_path: str) -> None:
     """_summary_
 
@@ -248,7 +249,7 @@ def compute_simmatrix(output_dir: str, input_dsm_vec: str, input_dsm_idx: str,
     right_vectors_to_load = set()
     if not right_subset_path == "all":
         right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
-    
+
     vectors_to_load = None
     if len(left_vectors_to_load) and len(right_vectors_to_load):
         vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
@@ -258,11 +259,11 @@ def compute_simmatrix(output_dir: str, input_dsm_vec: str, input_dsm_idx: str,
     print("Shape of dsm: {}".format(DSM.shape))
 
     simmatrix = distance.cdist(DSM, DSM, metric="cosine")
-    output_fname = output_dir+"simmatrix_nochunk.sim.gz"
+    output_fname = output_dir.joinpath("simmatrix_nochunk.sim.gz")
     np.savetxt(output_fname, simmatrix)
 
 
-def reduce(output_dir: str, similarities_values: List[str], top_k: int) -> None:
+def reduce(output_dir: Path, similarities_values: List[str], top_k: int) -> None:
 
     matrix_topk = None
     idxs_topk = None
@@ -284,8 +285,8 @@ def reduce(output_dir: str, similarities_values: List[str], top_k: int) -> None:
             matrix_topk = np.vstack((matrix_topk, chunk_topk))
             idxs_topk = np.vstack((idxs_topk, idxs[:, :top_k]))
 
-    np.save(output_dir+"catenae-dsm-red.sim.npy", matrix_topk)
-    np.save(output_dir+"catenae-dsm-red.idxs.npy", idxs_topk)
+    np.save(output_dir.joinpath("catenae-dsm-red.sim.npy"), matrix_topk)
+    np.save(output_dir.joinpath("catenae-dsm-red.idxs.npy"), idxs_topk)
 
 
 def query_neighbors(input_dsm_sim: str, input_dsm_idx: str,
@@ -318,7 +319,7 @@ def query_neighbors(input_dsm_sim: str, input_dsm_idx: str,
         catena = catena.strip()
 
         if catena in cat_to_idx:
-            
+
             idx = cat_to_idx[catena]
             print("Found catena", catena, "with index", idx)
 

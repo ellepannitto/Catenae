@@ -105,3 +105,32 @@ def load_vectors(input_path_vec: str, input_path_idx: str,
                          dtype=np.float32)
 
     return vectors
+
+
+class DefaultList(list):
+
+    def __init__(self, iterable: Iterable, default_value: str = None):
+        self.default_value = default_value
+        super().__init__(iterable)
+
+    def __setitem__(self, index, item):
+
+        while index >= len(self):
+            super().append(self.default_value)
+
+        super().__setitem__(index, item)
+
+    def fill(self, index):
+
+        while index > len(self):
+            super().append(self.default_value)
+
+
+
+if __name__ == "__main__":
+    lst = DefaultList([1,2,3], "_")
+    print(type(lst))
+    # type(lst)
+    lst[5] = "a"
+
+    print(lst)

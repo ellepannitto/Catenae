@@ -1,3 +1,5 @@
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
 """
 Entry point for package "catenae"
 """
@@ -230,10 +232,8 @@ def main() -> None:
 
     # Compute spearmanR correlation among lists of catenae
     parser_correlate = subparsers.add_parser("spearman",
-                                            description="compute spearman correlation between \
-                                            lists of catenae",
-                                            help="compute spearman correlation between \
-                                            lists of catenae",
+                                            description="compute spearman correlation between lists of catenae", # pylint:disable=line-too-long
+                                            help="compute spearman correlation between lists of catenae", # pylint:disable=line-too-long
                                             formatter_class=ArgumentDefaultsHelpFormatter)
     parser_correlate.add_argument("-o", "--output-dir", default="data/output_correlations/",
                                   help="path to output dir, default is data/output_correlations/")
@@ -250,10 +250,8 @@ def main() -> None:
     # Extract core catenae
     # TODO: check!
     parser_corecatenae = subparsers.add_parser("corecatenae",
-                                               description="compute stats about the core catenae \
-                                               for group of speakers",
-                                               help="compute stats about the core catenae for \
-                                               group of speakers",
+                                               description="compute stats about the core catenae for group of speakers", # pylint:disable=line-too-long
+                                               help="compute stats about the core catenae for group of speakers", # pylint:disable=line-too-long
                                                formatter_class=ArgumentDefaultsHelpFormatter)
     parser_corecatenae.add_argument("-o", "--output-dir", default="data/output_corecatenae/",
                                     help="path to output dir, default is data/output_corecatenae/")

@@ -283,7 +283,7 @@ def compute_pos_distribution(output_dir, corpus_dirpath, pos_list):
                 logger.info("Analyzing corpus: {}".format(filename))
                 sorted_freqs = extract_pos(corpus_dirpath+filename, pos)
 
-                with open(output_dir+corpus_dirpath.split("/")[-2]+"."+filename.split(".")[0]+".{}".format(pos),
+                with open(output_dir.joinpath(corpus_dirpath.split("/")[-2]+"."+filename.split(".")[0]+f".{pos}"),
                           "w") as fout:
                     for x, y, z in sorted_freqs:
                         print("{}\t{}\t{}".format(x, y, z), file=fout)
@@ -351,7 +351,7 @@ def compute_synrel_distribution(output_dir, corpus_dirpath, synrel_list):
                 logger.info("Analyzing corpus: {}".format(filename))
                 sorted_freqs_lem, sorted_freqs_mix, sorted_freqs_abs = extract_rel(corpus_dirpath+filename, rel)
 
-                with open(output_dir+corpus_dirpath.split("/")[-2]+"."+filename.split(".")[0]+".lem_{}".format(rel),
+                with open(output_dir.joinpath(corpus_dirpath.split("/")[-2]+"."+filename.split(".")[0]+f".lem_{rel}"),
                           "w") as fout_lem, \
                      open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[
                             0] + ".mix_{}".format(rel), "w") as fout_mix, \
