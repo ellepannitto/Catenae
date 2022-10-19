@@ -6,10 +6,11 @@ import uuid
 import glob
 import gzip
 import math
-import tqdm
 
 from pathlib import Path
 from typing import List
+
+import tqdm
 
 from catenae.utils import files_utils as futils
 from catenae.utils import data_utils as dutils
