@@ -1,5 +1,4 @@
 import logging
-import string
 import collections
 import itertools
 import uuid
@@ -84,8 +83,6 @@ def process_sentence(sentence, freqdict, catdict, totalsdict,
 def process_cooccurrences(sentence, coocc_dict, catenae_freq,
                           accepted_catenae, min_len_catena, max_len_catena):
 
-    admitted_chars = string.ascii_letters+".-' "
-
     children = {}
     tokens = {}
     postags = {}
@@ -94,7 +91,7 @@ def process_cooccurrences(sentence, coocc_dict, catenae_freq,
 
     for token in sentence:
         token = token.split("\t")
-        position, word, lemma, pos, _, morph, head, rel, _, _ = token
+        position, word, _, pos, _, _, head, rel, _, _ = token
         if catutils.pos_admitted(pos) and catutils.rel_admitted(rel):
             position = int(position)
 
