@@ -1,3 +1,4 @@
+# pylint: disable=unspecified-encoding
 """
 Set of utilities for reading Corpus.
 """
@@ -49,3 +50,27 @@ def get_linear(sentence: List[str]) -> str:
     for token in sentence:
         res.append(token.split("\t")[1])
     return " ".join(res)
+
+
+def reader(input_file: str) -> List[List[str]]: # TODO: check docstring
+    """Read input file containing ProfilingUD output.
+
+    Args:
+        input_file (str): path to input file
+
+    Yields:
+        Iterator[List[List[str]]]: list representing sentence
+    """
+    sentence = []
+    with open(input_file) as fin:
+        for line in fin:
+            linestrip = line.strip()
+            if len(linestrip) and not linestrip[0] == "#":
+                linesplit = linestrip.split("\t")
+                sentence.append(linesplit)
+            else:
+                if len(sentence) > 1:
+                    yield sentence
+                sentence = []
+    if len(sentence) > 1:
+        yield sentence

@@ -7,7 +7,7 @@ import logging
 
 from pathlib import Path
 
-from typing import Iterable
+from typing import Iterable, List, Tuple, TextIO
 
 
 logger = logging.getLogger(__name__)
@@ -48,3 +48,16 @@ def check_or_create_dir(path: str) -> Path:
         logger.info("Checked path: %s", path)
 
     return path
+
+
+def print_formatted(list_of_tuples: List[Tuple], file_handler: TextIO, sep: str = "\t") -> None:
+    """_summary_
+
+    Args:
+        list_of_tuples (List[Tuple]): _description_
+        file_handler (TextIO): _description_
+        sep (str, optional): _description_. Defaults to "\t".
+    """
+
+    for tup in list_of_tuples:
+        print(sep.join(tup), file=file_handler)
