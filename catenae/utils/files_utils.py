@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_filenames(input_dir: str) -> Iterable[str]:
+    # TODO: parametrize regex to look for
+    # TODO: use in statistics instead of if.
     """Returns paths to files contained in directory.
 
     Args:
