@@ -1,8 +1,7 @@
 import sys
-import catenae
-
 from multiprocessing import Pool
 
+import catenae
 
 output_dir_basename = sys.argv[1]
 input_dir_basename = sys.argv[2]
