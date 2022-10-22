@@ -4,6 +4,8 @@
 Entry point for package "catenae"
 """
 
+# TODO add function to check input dirs and input filepaths
+
 import argparse
 from argparse import RawTextHelpFormatter, ArgumentDefaultsHelpFormatter
 import logging.config
@@ -331,18 +333,30 @@ def main() -> None:
                                        help="path to file containing catena to index mapping")
     parser_queryneighbors.set_defaults(func=mutils.query_neighbors)
 
-    # Projects list of catenae on data
-    parser_glass = subparsers.add_parser("glass",
-                                         description="filters parsed file based on set of catenae",
-                                         help="filters parsed file based on set of catenae",
-                                         formatter_class=ArgumentDefaultsHelpFormatter)
-    parser_glass.add_argument("-o", "--output-dir", default="data/output_glass/",
-                              help="path to output dir, default is data/output_glass/")
-    parser_glass.add_argument("-i", "--input", required=True,
-                              help="path to input file in CoNLL format")
-    parser_glass.add_argument("-c", "--catenae", required=True,
-                              help="path to file containing catenae")
-    parser_glass.set_defaults(func=mutils.glass)
+    # Creates matrix to project list of catenae on data
+    parser_glassmatrix = subparsers.add_parser("glassify-matrix",
+                                               description="filters parsed file based on set of catenae", # pylint:disable=line-too-long
+                                               help="filters parsed file based on set of catenae",
+                                               formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_glassmatrix.add_argument("-o", "--output-dir", default="data/output_glass/",
+                                    help="path to output dir, default is data/output_glass/")
+    parser_glassmatrix.add_argument("-i", "--input", required=True,
+                                    help="path to input file in CoNLL format")
+    parser_glassmatrix.add_argument("-c", "--catenae", required=True,
+                                    help="path to file containing catenae")
+    parser_glassmatrix.set_defaults(func=mutils.glassify_matrix)
+
+
+    # Collapses matrix to project list of catenae on data
+    parser_glasscollapse = subparsers.add_parser("glassify-collapse",
+                                                 description="collapses glassified matrices",
+                                                 help="collapses glassified matrices",
+                                                 formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_glasscollapse.add_argument("-o", "--output-dir", default="data/output_glasscollapse/",
+                                      help="path to output dir, default is data/output_glasscollapse/") # pylint:disable=line-too-long
+    parser_glasscollapse.add_argument("-i", "--input-dir", required=True,
+                                      help="path to input folder containing matrices")
+    parser_glasscollapse.set_defaults(func=mutils.glassify_collapse)
 
 
     args = root_parser.parse_args()

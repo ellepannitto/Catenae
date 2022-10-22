@@ -323,7 +323,7 @@ def reduce_simmatrix(args: argparse.Namespace) -> None:
     dsm.reduce(output_dir, similarities_values, top_k)
 
 
-def glass(args: argparse.Namespace) -> None:
+def glassify_matrix(args: argparse.Namespace) -> None:
     """Dispatch parameters for projecting catenae on data.
 
     Args:
@@ -333,4 +333,17 @@ def glass(args: argparse.Namespace) -> None:
     input_filename = args.input
     catenae_path = args.catenae
 
-    glassify.filter(output_dir, input_filename, catenae_path, min_len_catena=1, max_len_catena=5)
+    glassify.compute_matrix(output_dir, input_filename, catenae_path,
+                            min_len_catena=1, max_len_catena=5)
+
+
+def glassify_collapse(args: argparse.Namespace) -> None:
+    """Dispatch parameters for projecting catenae on data.
+
+    Args:
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
+    """
+    output_dir = futils.check_or_create_dir(args.output_dir)
+    input_dir = args.input_dir
+
+    glassify.collapse_matrix(output_dir, input_dir)

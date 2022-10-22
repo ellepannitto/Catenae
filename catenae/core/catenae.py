@@ -6,10 +6,12 @@ import math
 import uuid
 import glob
 
-from old_project.recurrentbabbling.utils.FileMerger.filesmerger import merge_and_collapse_pattern, merge_and_collapse_iterable
+# from old_project.recurrentbabbling.utils.FileMerger.filesmerger import merge_and_collapse_pattern, merge_and_collapse_iterable
+from FileMerger.filesmerger import core as fmerger
 
-from old_project.recurrentbabbling.utils import corpus_utils as cutils
-from old_project.recurrentbabbling.utils import data_utils as dutils
+from catenae.utils import corpus_utils as cutils
+from catenae.utils import data_utils as dutils
+from catenae.utils import catenae_utils as catutils
 
 
 def process(sentence, freqdict, catdict, totalsdict):
@@ -47,7 +49,7 @@ def process(sentence, freqdict, catdict, totalsdict):
 
     if 0 in children:
         root = children[0][0]
-        _, catenae = dutils.recursive_C(root, children)
+        _, catenae = catutils.recursive_C(root, children)
 
         for catena in catenae:
             if all(x not in tokens_to_remove for x in catena):
@@ -75,7 +77,7 @@ def process(sentence, freqdict, catdict, totalsdict):
 
 def extract_catenae(input_file, out_dir, sentences_batch_size, freq_threshold):
 
-    iterator = dutils.grouper(cutils.PlainCoNLLReader(input_file, 1, 25), sentences_batch_size)
+    iterator = dutils.grouper(cutils.plain_conll_reader(input_file, 1, 25), sentences_batch_size)
 
     for batch in iterator:
 
@@ -111,9 +113,9 @@ def extract_catenae(input_file, out_dir, sentences_batch_size, freq_threshold):
             for item, freq in sorted_totalsdict:
                 print("{}\t{}".format(item, freq), file=fout_totals)
 
-    merge_and_collapse_pattern(out_dir+"/catenae-freq-*", output_filename=out_dir+"/catenae-freq-summed.txt")
-    merge_and_collapse_pattern(out_dir+"/items-freq-*", output_filename=out_dir+"/items-freq-summed.txt")
-    merge_and_collapse_pattern(out_dir+"/totals-freq-*", output_filename=out_dir+"/totals-freq-summed.txt")
+    fmerger.merge_and_collapse_pattern(out_dir+"/catenae-freq-*", output_filename=out_dir+"/catenae-freq-summed.txt")
+    fmerger.merge_and_collapse_pattern(out_dir+"/items-freq-*", output_filename=out_dir+"/items-freq-summed.txt")
+    fmerger.merge_and_collapse_pattern(out_dir+"/totals-freq-*", output_filename=out_dir+"/totals-freq-summed.txt")
 
     freqdict_items = {}
     with open(out_dir+"/items-freq-summed.txt") as fin:
@@ -300,7 +302,7 @@ def parallel_abstraction_chain(output_folder, accepted_catenae, batch):
 
 def abstraction_chains(output_folder, input_file, accepted_catenae, sentences_batch_size):
 
-    iterator = dutils.grouper(cutils.PlainCoNLLReader(input_file, 1, 25), sentences_batch_size)
+    iterator = dutils.grouper(cutils.plain_conll_reader(input_file, 1, 25), sentences_batch_size)
 
     files_to_merge = []
     merge_steps = 0
@@ -311,9 +313,9 @@ def abstraction_chains(output_folder, input_file, accepted_catenae, sentences_ba
 
         if len(files_to_merge) > 30:
             new_filename = output_folder+"/merged-{}".format(merge_steps)
-            merge_and_collapse_iterable(files_to_merge, output_folder+"/merged-{}".format(merge_steps))
+            fmerger.merge_and_collapse_iterable(files_to_merge, output_folder+"/merged-{}".format(merge_steps))
 
             merge_steps += 1
             files_to_merge = [new_filename]
 
-    merge_and_collapse_iterable(files_to_merge, output_folder + "/merged-{}".format(merge_steps))
+    fmerger.merge_and_collapse_iterable(files_to_merge, output_folder + "/merged-{}".format(merge_steps))
