@@ -16,7 +16,8 @@ from catenae.utils import data_utils as dutils
 from catenae.utils import corpus_utils as cutils
 from catenae.utils import catenae_utils as catutils
 
-from FileMerger.filesmerger import core as fmerger
+import filemerger as fmerger
+# from FileMerger.filesmerger import core as fmerger
 
 
 logger = logging.getLogger(__name__)
