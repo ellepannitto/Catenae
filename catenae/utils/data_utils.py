@@ -9,7 +9,8 @@ from typing import Set, Any, Iterable
 import tqdm
 import numpy as np
 
-from FileMerger.filesmerger import utils as fmergerutils
+import filemerger.utils as fmergerutils
+# from FileMerger.filesmerger import utils as fmergerutils
 
 
 def grouper(iterable: Iterable[Any], n: int, fillvalue: Any = None) -> Iterable: # pylint:disable=C0103
@@ -108,19 +109,41 @@ def load_vectors(input_path_vec: str, input_path_idx: str,
 
 
 class DefaultList(list):
+    """Extend class List.
 
-    def __init__(self, iterable: Iterable, default_value: str = None):
+    The class makes it possible to assign a value is a out of bound position, the list will be
+    filled with default values up to that position.
+    """
+
+    def __init__(self, iterable: Iterable[Any], default_value: Any = None):
+        """Initialize list from iterable. Store default value.
+
+        Args:
+            iterable (Iterable[Any]): iterable to build the list from
+            default_value (Any, optional): Default value used to fill the list. Defaults to None.
+        """
         self.default_value = default_value
         super().__init__(iterable)
 
-    def __setitem__(self, index, item):
+    def __setitem__(self, index: int, item: Any):
+        """Insert item in position index. If position index is larger that the length of the list,
+        the list is filled with default values.
 
-        while index >= len(self):
-            super().append(self.default_value)
+        Args:
+            index (int): position where the item will be placed
+            item (Any): item to place
+        """
 
-        super().__setitem__(index, item)
+        self.fill(index)
 
-    def fill(self, index):
+        super().append(index, item)
+
+    def fill(self, index: int):
+        """Fills the list with default value from position len to position index-1
+
+        Args:
+            index (int): _description_
+        """
 
         while index > len(self):
             super().append(self.default_value)

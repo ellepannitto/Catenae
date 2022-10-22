@@ -15,7 +15,8 @@ from scipy.sparse.linalg import svds, eigs
 
 from catenae.utils import data_utils as dutils
 
-from FileMerger.filesmerger import utils as fmergerutils
+import filemerger.utils as fmergerutils
+# from FileMerger.filesmerger import utils as fmergerutils
 
 
 logger = logging.getLogger(__name__)
