@@ -5,3 +5,4 @@ tqdm>=4
 ufal.udpipe
 sklearn
 git+https://github.com/ellepannitto/FileMerger@62acad7#egg=filemerger
+networkx
