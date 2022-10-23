@@ -1,7 +1,12 @@
+# pylint: disable=unspecified-encoding
+"""_summary_
+"""
 import sys
+
 from multiprocessing import Pool
 
 import catenae
+
 
 output_dir_basename = sys.argv[1]
 input_dir_basename = sys.argv[2]
@@ -9,13 +14,15 @@ input_dir_basename = sys.argv[2]
 
 with Pool(2) as p:
 
-    output_dir_iter = [output_dir_basename+"{}/".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
-    input_dir_iter = [input_dir_basename+"{}/".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
+    output_dir_iter = [f"{output_dir_basename}/{x}/"
+                       for x in [str(n).zfill(2) for n in range(1, 11)]]
+    input_dir_iter = [f"{input_dir_basename}/{x}/"
+                      for x in [str(n).zfill(2) for n in range(1, 11)]]
 
-    cooccurrences_filepath_iter = [x+"/catenae-coocc-summed.gz" for x in input_dir_iter]
-    frequences_filepath_iter = [x+"/catenae-freqs-summed.gz" for x in input_dir_iter]
+    cooccurrences_filepath_iter = [f"{x}/catenae-coocc-summed.gz" for x in input_dir_iter]
+    frequences_filepath_iter = [f"{x}/catenae-freqs-summed.gz" for x in input_dir_iter]
 
-    freqs_filepath_iter = [x+"/totals-freqs.txt" for x in input_dir_iter]
+    freqs_filepath_iter = [f"{x}/totals-freqs.txt" for x in input_dir_iter]
 
     TOT_iter = []
 
@@ -25,7 +32,8 @@ with Pool(2) as p:
             TOT = int(line[1])
             TOT_iter.append(TOT)
 
-    p.starmap(catenae.core.dsm.build, zip(output_dir_iter, cooccurrences_filepath_iter, frequences_filepath_iter, TOT_iter))
+    p.starmap(catenae.core.dsm.build,
+              zip(output_dir_iter, cooccurrences_filepath_iter, frequences_filepath_iter, TOT_iter))
 
 # for i in range(1, 11):
 #     n = str(i).zfill(2)

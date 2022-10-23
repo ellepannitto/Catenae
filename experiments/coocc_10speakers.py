@@ -1,7 +1,10 @@
+"""_summary_
+"""
 import sys
-import catenae
 
 from multiprocessing import Pool
+
+import catenae
 
 
 output_dir_basename = sys.argv[1]
@@ -11,10 +14,13 @@ weighted_dir_basename = sys.argv[3]
 
 with Pool(3) as p:
 
-    output_dir_iter = [output_dir_basename+"{}/".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
-    corpus_dir_iter = [corpus_dir_basename+"{}/".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
+    output_dir_iter = [f"{output_dir_basename}/{x}/"
+                       for x in [str(n).zfill(2) for n in range(1, 11)]]
+    corpus_dir_iter = [f"{corpus_dir_basename}/{x}/"
+                       for x in [str(n).zfill(2) for n in range(1, 11)]]
 
-    accepted_catenae_filepath_iter = [weighted_dir_basename+"{}/catenae-filtered.txt".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
+    accepted_catenae_filepath_iter = [f"{weighted_dir_basename}/{x}/catenae-filtered.txt"
+                                      for x in [str(n).zfill(2) for n in range(1, 11)]]
 
     top_k_iter = [float("inf") for _ in range(1, 11)]
     min_len_sentence_iter = [3 for _ in range(1, 11)]
@@ -29,13 +35,15 @@ with Pool(3) as p:
 
     include_words_iter = [True for _ in range(1, 11)]
 
-    words_filepath_iter = [weighted_dir_basename+"{}/items-freq-summed.gz".format(x) for x in [str(n).zfill(2) for n in range(1, 11)]]
+    words_filepath_iter = [f"{weighted_dir_basename}/{x}/items-freq-summed.gz"
+                           for x in [str(n).zfill(2) for n in range(1, 11)]]
 
 
-    p.starmap(catenae.core.extraction.extract_coccurrences, zip(output_dir_iter, corpus_dir_iter, accepted_catenae_filepath_iter, top_k_iter,
-                                    min_len_sentence_iter, max_len_sentence_iter, sentences_batch_size_iter,
-                                    min_freq_iter, min_len_catena_iter, max_len_catena_iter,
-                                    include_words_iter, words_filepath_iter))
+    p.starmap(catenae.core.extraction.extract_coccurrences,
+              zip(output_dir_iter, corpus_dir_iter, accepted_catenae_filepath_iter, top_k_iter,
+                  min_len_sentence_iter, max_len_sentence_iter, sentences_batch_size_iter,
+                  min_freq_iter, min_len_catena_iter, max_len_catena_iter,
+                  include_words_iter, words_filepath_iter))
 
 # for i in range(1, 11):
 #     n = str(i).zfill(2)
@@ -61,7 +69,8 @@ with Pool(3) as p:
 #     words_filepath = weighted_dir_basename+"{}/items-freq-summed.gz".format(n)
 
 
-#     catenae.core.extraction.extract_coccurrences(output_dir, corpus_dir, accepted_catenae_filepath, top_k,
+#     catenae.core.extraction.extract_coccurrences(output_dir, corpus_dir,
+#                                     accepted_catenae_filepath, top_k,
 #                                     min_len_sentence, max_len_sentence, sentences_batch_size,
 #                                     min_freq, min_len_catena, max_len_catena,
 #                                     include_words, words_filepath)
