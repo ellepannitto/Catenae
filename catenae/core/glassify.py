@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 import tqdm
+import networkx as nx
 
 from catenae.utils import corpus_utils as cutils
 from catenae.utils import data_utils as dutils
@@ -107,7 +108,7 @@ def compute_matrix(output_dir: Path, input_dir: str, catenae_fpath: str,
 def collapse_matrix(output_dir: Path, input_dir: str):
 
     for filename in os.listdir(input_dir):
-        with open(input_dir+"/"+filename) as fin:
+        with open(input_dir.joinpath(filename)) as fin:
             mat = []
             for line in fin:
                 line = line.strip()
@@ -139,7 +140,7 @@ def matchable(sentence, candidate_cxn):
 
 
 def update(sentence, cxn):
-    ret = ["_"]*len(sentence)
+    ret = [x for x in sentence]
     added = 0
     for i, cxn_el in enumerate(cxn):
         if not cxn_el == "_":
@@ -155,14 +156,42 @@ def process_bruteforce(mat):
 
     if len(rev_mat) > 1:
         search_space = rev_mat[1:]
-        projected_sentence = ["_"]*len(mat)
-        solutions = rec_find(projected_sentence, search_space, [])
+
+        G = nx.Graph()
+        for i, cxn in enumerate(search_space):
+            G.add_node(i)
+
+        for i, cxn1 in enumerate(search_space):
+            for j, cxn2 in enumerate(search_space):
+                if matchable(cxn1, cxn2):
+                    G.add_edge(i, j)
+
         print("TRANSLATED --- ", " ".join(rev_mat[0]))
         print("INTO --------- ")
-        for solution in solutions:
-            # print("\t", "\t\t".join(solution))
-            print(solution)
+        for element in nx.find_cliques(G):
+            projected_sentence = ["_"]*len(rev_mat[0])
+            built_from = []
+
+            for idx in element:
+                projected_sentence, _ = update(projected_sentence, search_space[idx])
+                built_from.append(search_space[idx])
+
+            print("\t",len(built_from), "\t", "\t\t".join(projected_sentence))
+            for lst in built_from:
+                print("\t\t", "\t\t".join(lst))
         input()
+
+
+
+
+
+        # solutions = rec_find(projected_sentence, search_space, [])
+        # print("TRANSLATED --- ", " ".join(rev_mat[0]))
+        # print("INTO --------- ")
+        # for solution in solutions:
+        #     # print("\t", "\t\t".join(solution))
+        #     print(solution)
+        # input()
 
 
 def process(mat):
