@@ -105,23 +105,6 @@ def compute_matrix(output_dir: Path, input_dir: str, catenae_fpath: str,
                         print("\n", file=fout)
 
 
-def collapse_matrix(output_dir: Path, input_dir: str):
-
-    for filename in os.listdir(input_dir):
-        with open(input_dir.joinpath(filename)) as fin:
-            mat = []
-            for line in fin:
-                line = line.strip()
-
-                if line:
-                    mat.append(line.split("\t"))
-                else:
-                    if mat:
-                        # process(mat)
-                        process_bruteforce(mat)
-                    mat = []
-
-
 def matchable(sentence, candidate_cxn):
     # print("matching", sentence, "with", candidate_cxn)
     matchable = True
@@ -150,9 +133,10 @@ def update(sentence, cxn):
     return ret, added
 
 
-def process_bruteforce(mat):
+def process(mat):
 
     rev_mat = [[x[i] for x in mat] for i in range(len(mat[0]))]
+    solutions = []
 
     if len(rev_mat) > 1:
         search_space = rev_mat[1:]
@@ -166,8 +150,6 @@ def process_bruteforce(mat):
                 if matchable(cxn1, cxn2):
                     G.add_edge(i, j)
 
-        print("TRANSLATED --- ", " ".join(rev_mat[0]))
-        print("INTO --------- ")
         for element in nx.find_cliques(G):
             projected_sentence = ["_"]*len(rev_mat[0])
             built_from = []
@@ -176,64 +158,9 @@ def process_bruteforce(mat):
                 projected_sentence, _ = update(projected_sentence, search_space[idx])
                 built_from.append(search_space[idx])
 
-            print("\t",len(built_from), "\t", "\t\t".join(projected_sentence))
-            for lst in built_from:
-                print("\t\t", "\t\t".join(lst))
-        input()
+            solutions.append((len(built_from), projected_sentence))
 
-
-
-
-
-        # solutions = rec_find(projected_sentence, search_space, [])
-        # print("TRANSLATED --- ", " ".join(rev_mat[0]))
-        # print("INTO --------- ")
-        # for solution in solutions:
-        #     # print("\t", "\t\t".join(solution))
-        #     print(solution)
-        # input()
-
-
-def process(mat):
-
-    rev_mat = [[x[i] for x in mat] for i in range(len(mat[0]))]
-
-    if len(rev_mat) > 1:
-        search_space = rev_mat[1:]
-
-        sorted_search_space = sorted(search_space, key=lambda x: abscore(x), reverse=True)
-
-        # sorted_search_space = sorted(sorted_search_space, key=lambda x: lenscore(x), reverse=True)
-        sorted_search_space = sorted(sorted_search_space, key=lambda x: lenscore(x))
-
-        current_idx = 0
-        something_to_add = True
-        projected_sentence = ["_"]*len(mat)
-        tot_items = 0
-        n_cxns = 0
-
-        while something_to_add and current_idx < len(sorted_search_space):
-            candidate = sorted_search_space[current_idx]
-            # print("current mat", projected_sentence)
-            # print("considering candidate", candidate)
-            if matchable(projected_sentence, candidate):
-                projected_sentence, added_items = update(projected_sentence, candidate)
-                tot_items += added_items
-                n_cxns += 1
-                # print("cxn is matchable")
-
-            # else:
-                # print("NOT MATCHABLE")
-
-            if tot_items == len(projected_sentence):
-                something_to_add = False
-
-            current_idx += 1
-
-        print("TRANSLATED --- ", " ".join(rev_mat[0]))
-        print("INTO --------- ", " ".join(projected_sentence))
-        print("CXNs EMPLOYED: ", n_cxns)
-        input()
+    return rev_mat[0], solutions
 
 
 def lenscore(x):
@@ -249,36 +176,31 @@ def abscore(x):
     n_pos = len(pos)
     n_words = len(new_x) - len(rels) - len(pos)
 
-    return 3*n_words + 2*n_pos + n_rels
+    return (3*n_words + 2*n_pos + n_rels) / len(new_x)
 
 
-def rec_find(partial_sentence, search_space, solutions, rec_level):
+def collapse_matrix(output_dir: Path, input_dir: str):
 
-    print("REC LEVEL:", rec_level)
-    print("Evaluating", search_space)
-    print("Against sentence", partial_sentence)
-    print("Solutions so far:", solutions)
+    lstdir_it = tqdm.tqdm(os.listdir(input_dir))
+    for filename in lstdir_it:
+        lstdir_it.set_description(f"Processing {filename}")
+        with open(input_dir.joinpath(filename)) as fin, \
+            open(output_dir.joinpath(filename), "w") as fout:
+            mat = []
+            for line in fin:
+                line = line.strip()
 
+                if line:
+                    mat.append(line.split("\t"))
+                else:
+                    if mat:
+                        original_sentence, solutions = process(mat)
+                        scored_solutions = [(x, y, abscore(y), lenscore(y)) for x, y in solutions]
+                        sorted_solutions = sorted(scored_solutions, key=lambda x: (x[2], x[3], x[0]), reverse=True)
 
-    for i, candidate in enumerate(search_space):
+                        print("SENTENCE:", " ".join(original_sentence), file=fout)
+                        print("TRANSLATIONS:", file=fout)
+                        for n_cxns, solution, abscore_v, lenscore_v in sorted_solutions:
+                            print("\t", n_cxns, "\t", "{:.2f}".format(abscore_v), "\t", lenscore_v, "\t", " ".join(solution), file=fout)
 
-        if matchable(partial_sentence, candidate):
-
-            updated_sentence, _ = update(partial_sentence, candidate)
-            updated_search_space = [search_space[k] for k in range(len(search_space)) if not k == i]
-            updated_solutions = solutions
-            rec_find(updated_sentence, updated_search_space, updated_solutions, rec_level+1)
-            solutions.append((updated_sentence, candidate))
-
-
-    return solutions
-
-
-if __name__ == "__main__":
-
-    search_space = [["a", "_", "_", "_"],
-                    ["a", "b", "_", "_"],
-                    ["A", "_", "b", "_"],
-                    ["A", "B", "b", "c"]]
-
-    rec_find(["_"]*4, search_space, [], 0)
+                    mat = []
