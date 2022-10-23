@@ -2,7 +2,6 @@ import logging
 import collections
 import gzip
 import math
-import tqdm
 
 from typing import List
 from pathlib import Path
@@ -12,10 +11,11 @@ import scipy as sp
 from scipy.spatial import distance
 from sklearn import metrics
 from scipy.sparse.linalg import svds, eigs
-
-from catenae.utils import data_utils as dutils
+import tqdm
 
 import filemerger.utils as fmergerutils
+
+from catenae.utils import data_utils as dutils
 # from FileMerger.filesmerger import utils as fmergerutils
 
 
@@ -31,7 +31,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
     with fmergerutils.open_file_by_extension(coocc_filepath) as fin_cocc, \
          fmergerutils.open_file_by_extension(freqs_filepath) as fin_freqs_left, \
          fmergerutils.open_file_by_extension(freqs_filepath) as fin_freqs_right, \
-         gzip.open(output_dir + "catenae-ppmi.gz", "wt") as fout:
+         gzip.open(output_dir.joinpath("catenae-ppmi.gz"), "wt") as fout:
 
         lineno = 1
 
@@ -74,7 +74,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
 
             ppmi = freq * math.log(freq*TOT/(freq_l*freq_r))
             if ppmi > 0:
-                print("{}\t{}\t{}\t{}".format(cat1, cat2, freq, ppmi), file=fout)
+                print(f"{cat1}\t{cat2}\t{freq}\t{ppmi}", file=fout)
 
             if not cat1 in item_to_id:
                 item_to_id[cat1] = id_max
@@ -91,7 +91,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
             lineno += 1
 
             if not lineno % 10000:
-                logger.info(f"PROCESSING LINE {lineno}")
+                logger.info(f"PROCESSING LINE %d", lineno)
 
     id_to_item = [0]*id_max
     for item, id in item_to_id.items():
@@ -106,11 +106,14 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
     S = sp.sparse.csc_matrix(S)
     u, s, vt = svds(S, k=svd_dim)
 
-    with gzip.open(output_dir + "catenae-dsm.gz", "wt") as fout:
-        el_no = 0
-        for el in u:
-            print("{}\t{}".format(id_to_item[el_no], " ".join(str(x) for x in el)), file=fout)
-            el_no += 1
+    with gzip.open(output_dir.joinpath("catenae-dsm.idx.gz"), "wt") as fout_idx \
+        gzip.open(output_dir.joinpath("catenae-dsm.vec.gz"), "wt") as fout_vec:
+
+        # el_no = 0
+        for el_no, el in enumerate(u):
+            print(id_to_item[el_no], file=fout_idx)
+            print(" ".join(str(x) for x in el), file=fout_vec)
+            # el_no += 1
 
 
 def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
