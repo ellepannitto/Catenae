@@ -27,7 +27,7 @@ def compute_pos_stats(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    corpus_dir = args.corpus_dirpath
+    corpus_dir = futils.check_path(args.corpus_dirpath)
     pos_list = args.pos
 
     stats.compute_pos_distribution(output_dir, corpus_dir, pos_list)
@@ -41,7 +41,7 @@ def compute_morph_stats(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    corpus_dir = args.corpus_dirpath
+    corpus_dir = futils.check_path(args.corpus_dirpath)
     trait = args.trait
     values_list = args.values
 
@@ -56,7 +56,7 @@ def compute_verbedges_stats(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    corpus_dir = args.corpus_dirpath
+    corpus_dir = futils.check_path(args.corpus_dirpath)
     edges = args.number_edges
 
     stats.compute_verbedges_distribution(output_dir, corpus_dir, edges)
@@ -70,7 +70,7 @@ def compute_sbj_stats(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    corpus_dir = args.corpus_dirpath
+    corpus_dir = futils.check_path(args.corpus_dirpath)
 
     stats.compute_sbj_distribution(output_dir, corpus_dir)
 
@@ -83,7 +83,7 @@ def compute_synrel_stats(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    corpus_dir = args.corpus_dirpath
+    corpus_dir = futils.check_path(args.corpus_dirpath)
     synrel_list = args.synrels
 
     stats.compute_synrel_distribution(output_dir, corpus_dir, synrel_list)
@@ -97,7 +97,7 @@ def extract_catenae(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    corpus_dir = args.corpus_dirpath
+    corpus_dir = futils.check_path(args.corpus_dirpath)
 
     min_len_sentence = args.min_len_sentence
     max_len_sentence = args.max_len_sentence
@@ -121,9 +121,9 @@ def weight_catenae(args: argparse.Namespace) -> None:
 
     output_dir = futils.check_or_create_dir(args.output_dir)
 
-    items_filepath = args.items_filepath
-    totals_filepath = args.totals_filepath
-    catenae_filepath = args.catenae_filepath
+    items_filepath = futils.check_path(args.items_filepath)
+    totals_filepath = futils.check_path(args.totals_filepath)
+    catenae_filepath = futils.check_path(args.catenae_filepath)
 
     extraction.weight_catenae(output_dir,
                               items_filepath, totals_filepath, catenae_filepath)
@@ -138,7 +138,7 @@ def filter_catenae(args: argparse.Namespace) -> None:
 
     output_dir = futils.check_or_create_dir(args.output_dir)
 
-    input_file = args.input_filepath
+    input_file = futils.check_path(args.input_filepath)
     frequency_threshold = args.min_freq
     weight_threshold = args.min_weight
     min_len_catena = args.min_len_catena
@@ -156,8 +156,8 @@ def extract_cooccurrences(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    corpus_dir = args.corpus_dirpath
-    accepted_catenae_filepath = args.accepted_catenae
+    corpus_dir = futils.check_path(args.corpus_dirpath)
+    accepted_catenae_filepath = futils.check_path(args.accepted_catenae)
     top_k = args.topk
 
     min_len_sentence = args.min_len_sentence
@@ -169,7 +169,7 @@ def extract_cooccurrences(args: argparse.Namespace) -> None:
     max_len_catena = args.max_len_catena
 
     include_words = args.include_len_one_items
-    words_filepath = args.words_filepath
+    words_filepath = futils.check_path(args.words_filepath)
 
     extraction.extract_coccurrences(output_dir, corpus_dir, accepted_catenae_filepath, top_k,
                                     min_len_sentence, max_len_sentence, sentences_batch_size,
@@ -187,8 +187,8 @@ def build_dsm(args: argparse.Namespace) -> None:
     # TODO: add parameter for dimensions
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    cooccurrences_filepath = args.cooccurrences_filepath
-    frequences_filepath = args.frequences_filepath
+    cooccurrences_filepath = futils.check_path(args.cooccurrences_filepath)
+    frequences_filepath = futils.check_path(args.frequences_filepath)
     tot_frequency = args.total
 
     dsm.build(output_dir, cooccurrences_filepath, frequences_filepath, tot_frequency)
@@ -202,7 +202,7 @@ def sample_input(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_dir = args.corpus_dirpath
+    input_dir = futils.check_path(args.corpus_dirpath)
     size = args.size
     seed = args.seed
 
@@ -217,8 +217,8 @@ def udparse(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_dir = args.input_dir
-    model_path = args.model
+    input_dir = futils.check_path(args.input_dir)
+    model_path = futils.check_path(args.model)
 
     corpus.parse(output_dir, input_dir, model_path)
 
@@ -231,7 +231,7 @@ def correlate(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    filenames_list = args.files_list
+    filenames_list = [futils.check_path(fname) for fname in args.files_list]
     topk = args.top_k
     mutual_information = args.mi_threshold
     frequency = args.frequency_threshold
@@ -247,8 +247,8 @@ def corecatenae(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_filenames_list = args.input_files_list
-    babbling_filenames_list = args.babbling_files_list
+    input_filenames_list = futils.check_path(args.input_files_list)
+    babbling_filenames_list = futils.check_path(args.babbling_files_list)
     topk = args.top_k
 
     analysis.corecatenae(output_dir, input_filenames_list, babbling_filenames_list, topk)
@@ -262,7 +262,7 @@ def extract_sentences(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_dir = args.input_dir
+    input_dir = futils.check_path(args.input_dir)
     catenae_list = args.catenae_list
 
     extraction.extract_sentences(output_dir, input_dir, catenae_list)
@@ -276,10 +276,10 @@ def compute_simmatrix(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_dsm_vec = args.dsm_vec
-    input_dsm_idx = args.dsm_idx
-    left_subset_path = args.reduced_left_matrix
-    right_subset_path = args.reduced_right_matrix
+    input_dsm_vec = futils.check_path(args.dsm_vec)
+    input_dsm_idx = futils.check_path(args.dsm_idx)
+    left_subset_path = futils.check_path(args.reduced_left_matrix)
+    right_subset_path = futils.check_path(args.reduced_right_matrix)
     working_memory = args.working_memory
     top_k = args.top_k
 
@@ -302,9 +302,9 @@ def query_neighbors(args: argparse.Namespace) -> None:
     Args:
         args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
-    input_dsm_sim = args.similarities_matrix
-    input_dsm_idx = args.indexes_matrix
-    input_idx_map = args.indexes_map
+    input_dsm_sim = futils.check_path(args.similarities_matrix)
+    input_dsm_idx = futils.check_path(args.indexes_matrix)
+    input_idx_map = futils.check_path(args.indexes_map)
 
     dsm.query_neighbors(input_dsm_sim, input_dsm_idx, input_idx_map)
 
@@ -317,7 +317,7 @@ def reduce_simmatrix(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    similarities_values = args.similarities_values
+    similarities_values = futils.check_path(args.similarities_values)
     top_k = args.top_k
 
     dsm.reduce(output_dir, similarities_values, top_k)
@@ -330,8 +330,8 @@ def glassify_matrix(args: argparse.Namespace) -> None:
         args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_filename = args.input
-    catenae_path = args.catenae
+    input_filename = futils.check_path(args.input)
+    catenae_path = futils.check_path(args.catenae)
 
     glassify.compute_matrix(output_dir, input_filename, catenae_path,
                             min_len_catena=1, max_len_catena=5)
@@ -344,6 +344,6 @@ def glassify_collapse(args: argparse.Namespace) -> None:
         args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_dir = args.input_dir
+    input_dir = futils.check_path(args.input_dir)
 
     glassify.collapse_matrix(output_dir, input_dir)

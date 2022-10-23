@@ -4,6 +4,7 @@ Set of utilities for interacting with files and directories.
 import os
 import glob
 import logging
+import sys
 
 from pathlib import Path
 
@@ -11,6 +12,24 @@ from typing import Iterable, List, Tuple, TextIO
 
 
 logger = logging.getLogger(__name__)
+
+
+def check_path(path: str) -> Path:
+    """Check if a path exist
+
+    Args:
+        path (str): string passed as input from user
+
+    Returns:
+        Path: Path object pointing to resource, if existent
+    """
+
+    path_obj = Path(path)
+
+    if not path_obj.exists():
+        sys.exit(f'Path {path} does not exist')
+
+    return path_obj
 
 
 def get_filenames(input_dir: str) -> Iterable[str]:
