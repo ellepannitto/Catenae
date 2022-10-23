@@ -3,6 +3,7 @@
 import sys
 
 from multiprocessing import Pool
+from pathlib import Path
 
 import catenae
 
@@ -18,8 +19,8 @@ MAX_LEN_CATENA = 5
 
 with Pool(3) as p:
 
-    iter_output_dir = [f"{output_dir_basename}/{x}/"
-                       for x in [str(n).zfill(2) for n in range(1, 11)]]
+    iter_output_dir = [Path(f"{output_dir_basename}/{x}/")
+                       for x in [str(n).zfill(2) for n in range(1, 11)]] # TODO: change in all experiments
     iter_input_file = [f"{input_dir_basename}/{x}/catenae-weighted.gz"
                        for x in [str(n).zfill(2) for n in range(1, 11)]]
 

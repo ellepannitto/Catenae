@@ -3,6 +3,7 @@
 import sys
 
 from multiprocessing import Pool
+from pathlib import Path
 
 import catenae
 
@@ -14,7 +15,7 @@ weighted_dir_basename = sys.argv[3]
 
 with Pool(3) as p:
 
-    output_dir_iter = [f"{output_dir_basename}/{x}/"
+    output_dir_iter = [Path(f"{output_dir_basename}/{x}/")
                        for x in [str(n).zfill(2) for n in range(1, 11)]]
     corpus_dir_iter = [f"{corpus_dir_basename}/{x}/"
                        for x in [str(n).zfill(2) for n in range(1, 11)]]
