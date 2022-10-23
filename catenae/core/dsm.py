@@ -106,7 +106,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
     S = sp.sparse.csc_matrix(S)
     u, s, vt = svds(S, k=svd_dim)
 
-    with gzip.open(output_dir.joinpath("catenae-dsm.idx.gz"), "wt") as fout_idx \
+    with gzip.open(output_dir.joinpath("catenae-dsm.idx.gz"), "wt") as fout_idx, \
         gzip.open(output_dir.joinpath("catenae-dsm.vec.gz"), "wt") as fout_vec:
 
         # el_no = 0
