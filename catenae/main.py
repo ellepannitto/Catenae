@@ -201,8 +201,8 @@ def main() -> None:
                             help="path to cooccurrences file", required=True)
     parser_dsm.add_argument("-f", "--frequences-filepath",
                             help="path to frequencies file", required=True)
-    parser_dsm.add_argument("-t", "--total", type=int,
-                            help="sum of frequencies", required=True)
+    parser_dsm.add_argument("-t", "--total", type=int, required=True,
+                            help="sum of frequencies")
     parser_dsm.set_defaults(func=mutils.build_dsm)
 
     # Sample input of determinate size based on number of words
@@ -356,6 +356,7 @@ def main() -> None:
                                       help="path to output dir, default is data/output_glasscollapse/") # pylint:disable=line-too-long
     parser_glasscollapse.add_argument("-i", "--input-dir", required=True,
                                       help="path to input folder containing matrices")
+    parser_glasscollapse.add_argument("--multiprocess", action="store_true")
     parser_glasscollapse.set_defaults(func=mutils.glassify_collapse)
 
 

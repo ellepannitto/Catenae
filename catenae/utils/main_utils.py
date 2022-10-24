@@ -345,5 +345,6 @@ def glassify_collapse(args: argparse.Namespace) -> None:
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
     input_dir = futils.check_path(args.input_dir)
+    multiprocess = args.multiprocess
 
-    glassify.collapse_matrix(output_dir, input_dir)
+    glassify.collapse_matrix(output_dir, input_dir, multiprocess)

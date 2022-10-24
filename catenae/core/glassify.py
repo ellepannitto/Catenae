@@ -3,8 +3,10 @@ import glob
 import itertools
 import math
 import os
+import functools
 
 from pathlib import Path
+from multiprocessing import Pool
 
 import tqdm
 import networkx as nx
@@ -158,7 +160,7 @@ def process(mat):
                 projected_sentence, _ = update(projected_sentence, search_space[idx])
                 built_from.append(search_space[idx])
 
-            solutions.append((len(built_from), projected_sentence))
+            solutions.append((built_from, projected_sentence))
 
     return rev_mat[0], solutions
 
@@ -179,28 +181,46 @@ def abscore(x):
     return (3*n_words + 2*n_pos + n_rels) / len(new_x)
 
 
-def collapse_matrix(output_dir: Path, input_dir: str):
+def collapse_matrix(output_dir: Path, input_dir: str, multiprocessing: bool) -> None:
 
-    lstdir_it = tqdm.tqdm(os.listdir(input_dir))
-    for filename in lstdir_it:
-        lstdir_it.set_description(f"Processing {filename}")
-        with open(input_dir.joinpath(filename)) as fin, \
-            open(output_dir.joinpath(filename), "w") as fout:
-            mat = []
-            for line in fin:
-                line = line.strip()
+    filenames = os.listdir(input_dir)
 
-                if line:
-                    mat.append(line.split("\t"))
-                else:
-                    if mat:
-                        original_sentence, solutions = process(mat)
-                        scored_solutions = [(x, y, abscore(y), lenscore(y)) for x, y in solutions]
-                        sorted_solutions = sorted(scored_solutions, key=lambda x: (x[2], x[3], x[0]), reverse=True)
+    if multiprocessing:
 
-                        print("SENTENCE:", " ".join(original_sentence), file=fout)
-                        print("TRANSLATIONS:", file=fout)
-                        for n_cxns, solution, abscore_v, lenscore_v in sorted_solutions:
-                            print("\t", n_cxns, "\t", "{:.2f}".format(abscore_v), "\t", lenscore_v, "\t", " ".join(solution), file=fout)
+        with Pool(10) as p:
+            p.map(functools.partial(basic_collapse, output_dir=output_dir, input_dir=input_dir),
+                filenames)
 
-                    mat = []
+    else:
+
+        lstdir_it = tqdm.tqdm(filenames)
+        for filename in lstdir_it:
+            lstdir_it.set_description(f"Processing {filename}")
+            basic_collapse(filename, output_dir, input_dir)
+
+
+def basic_collapse(filename: str, output_dir: Path, input_dir: str):
+
+    with open(input_dir.joinpath(filename)) as fin, \
+        open(output_dir.joinpath(filename), "w") as fout:
+        mat = []
+        for line in fin:
+            line = line.strip()
+
+            if line:
+                mat.append(line.split("\t"))
+            else:
+                if mat:
+                    original_sentence, solutions = process(mat)
+                    scored_solutions = [(x, y, abscore(y), lenscore(y)) for x, y in solutions]
+                    sorted_solutions = sorted(scored_solutions, key=lambda x: (x[2], x[3]), reverse=True)
+
+                    print("SENTENCE:", " ".join(original_sentence), file=fout)
+                    print("TRANSLATIONS:", file=fout)
+                    for built_from, solution, abscore_v, lenscore_v in sorted_solutions:
+                        built_from_str = [" ".join(x) for x in built_from]
+                        print("\t", "{:.2f}".format(abscore_v), "\t", lenscore_v,
+                              "\t", " ".join(solution),
+                              "\t", "\t".join(built_from_str), file=fout)
+
+                mat = []
