@@ -4,6 +4,7 @@
 import sys
 
 from multiprocessing import Pool
+from pathlib import Path
 
 import catenae
 
@@ -14,7 +15,7 @@ input_dir_basename = sys.argv[2]
 
 with Pool(2) as p:
 
-    output_dir_iter = [f"{output_dir_basename}/{x}/"
+    output_dir_iter = [Path(f"{output_dir_basename}/{x}/")
                        for x in [str(n).zfill(2) for n in range(1, 11)]]
     input_dir_iter = [f"{input_dir_basename}/{x}/"
                       for x in [str(n).zfill(2) for n in range(1, 11)]]
@@ -29,7 +30,7 @@ with Pool(2) as p:
     for freqs_filepath in freqs_filepath_iter:
         with open(freqs_filepath) as fin:
             line = fin.readline().strip().split("\t")
-            TOT = int(line[1])
+            TOT = float(line[1])
             TOT_iter.append(TOT)
 
     p.starmap(catenae.core.dsm.build,

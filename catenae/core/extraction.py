@@ -195,11 +195,11 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k
 
             total_freqs_global += total_freqs_partial
 
-    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir.joinpath("catenae-coocc-*")),
-                                        output_filename=output_dir.joinpath("catenae-coocc-summed.gz"),
+    fmerger.merge_and_collapse_iterable(glob.iglob(str(output_dir.joinpath("catenae-coocc-*"))),
+                                        output_filename=str(output_dir.joinpath("catenae-coocc-summed.gz")),
                                         delete_input=True)
-    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir.joinpath("catenae-freqs-*")),
-                                        output_filename=output_dir.joinpath("catenae-freqs-summed.gz"),
+    fmerger.merge_and_collapse_iterable(glob.iglob(str(output_dir.joinpath("catenae-freqs-*"))),
+                                        output_filename=str(output_dir.joinpath("catenae-freqs-summed.gz")),
                                         delete_input=True)
 
     with open(output_dir.joinpath("totals-freqs.txt"), "wt") as fout_total:
