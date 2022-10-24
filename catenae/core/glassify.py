@@ -9,6 +9,7 @@ from pathlib import Path
 from multiprocessing import Pool
 
 import tqdm
+from tqdm.contrib.concurrent import process_map
 import networkx as nx
 
 from catenae.utils import corpus_utils as cutils
@@ -107,16 +108,21 @@ def compute_matrix(output_dir: Path, input_dir: str, catenae_fpath: str,
                         print("\n", file=fout)
 
 
-def matchable(sentence, candidate_cxn):
+def matchable(cxn1, cxn2):
     # print("matching", sentence, "with", candidate_cxn)
     matchable = True
-    for i, sent_el in enumerate(sentence):
-        cxn_el = candidate_cxn[i]
 
+    for el1, el2 in zip(cxn1, cxn2):
 
-
-        if not (sent_el == "_" or sent_el == cxn_el):
+        if el1 == el2:
+            pass
+        elif el1 == "_" or el2 == "_":
+            pass
+        else:
             matchable = False
+
+        # if not (sent_el == "_" or sent_el == cxn_el):
+        #     matchable = False
 
         # if not cxn_el == "_" and not sent_el == "_":
         #     matchable = False
@@ -160,7 +166,7 @@ def process(mat):
                 projected_sentence, _ = update(projected_sentence, search_space[idx])
                 built_from.append(search_space[idx])
 
-            solutions.append((built_from, projected_sentence))
+            solutions.append((built_from, tuple(projected_sentence)))
 
     return rev_mat[0], solutions
 
@@ -186,10 +192,12 @@ def collapse_matrix(output_dir: Path, input_dir: str, multiprocessing: bool) -> 
     filenames = os.listdir(input_dir)
 
     if multiprocessing:
-
-        with Pool(10) as p:
-            p.map(functools.partial(basic_collapse, output_dir=output_dir, input_dir=input_dir),
-                filenames)
+        process_map(functools.partial(basic_collapse, output_dir=output_dir, input_dir=input_dir),
+                    filenames,
+                    max_workers=10, chunksize=200)
+        # with Pool(10) as p:
+        #     ret = list(tqdm.tqdm(p.imap(functools.partial(basic_collapse, output_dir=output_dir, input_dir=input_dir),
+        #                          filenames)))
 
     else:
 
@@ -212,10 +220,12 @@ def basic_collapse(filename: str, output_dir: Path, input_dir: str):
             else:
                 if mat:
                     original_sentence, solutions = process(mat)
+                    unique_solutions = set([y for x, y in solutions])
                     scored_solutions = [(x, y, abscore(y), lenscore(y)) for x, y in solutions]
                     sorted_solutions = sorted(scored_solutions, key=lambda x: (x[2], x[3]), reverse=True)
 
                     print("SENTENCE:", " ".join(original_sentence), file=fout)
+                    print("UNIQUE TRANSLATIONS:", len(unique_solutions), "/", len(solutions), file=fout)
                     print("TRANSLATIONS:", file=fout)
                     for built_from, solution, abscore_v, lenscore_v in sorted_solutions:
                         built_from_str = [" ".join(x) for x in built_from]
