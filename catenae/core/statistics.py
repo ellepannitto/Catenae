@@ -2,7 +2,6 @@
 """
 Functions to compute various kinds of statistics on corpus.
 """
-import os
 import logging
 import collections
 import itertools
@@ -18,7 +17,7 @@ from catenae.utils import files_utils as futils
 logger = logging.getLogger(__name__)
 
 
-def extract_rel(corpus_filepath: str, synrel: str) -> Tuple[List[Any], List[Any], List[Any]]:
+def extract_rel(corpus_filepath: str, synrel: str) -> Tuple[List[Any], List[Any], List[Any]]: # pylint: disable=too-many-locals
     # TODO: check shape of lists
     """_summary_
 
@@ -76,15 +75,15 @@ def extract_rel(corpus_filepath: str, synrel: str) -> Tuple[List[Any], List[Any]
                     tot_abstract += 1
 
     sorted_freqdist_lemmatized = sorted(freqdist_lemmatized.items(), key=lambda x: -x[1])
-    sorted_freqdist_lemmatized = [(x, y, "{:.10f}%".format(y * 100 / tot_lemmatized))
+    sorted_freqdist_lemmatized = [(x, y, f"{y * 100 / tot_lemmatized:.10f}%")
                                   for x, y in sorted_freqdist_lemmatized]
 
     sorted_freqdist_mixed = sorted(freqdist_mixed.items(), key=lambda x: -x[1])
-    sorted_freqdist_mixed = [(x, y, "{:.10f}%".format(y * 100 / tot_mixed))
+    sorted_freqdist_mixed = [(x, y, f"{y * 100 / tot_mixed:.10f}%")
                              for x, y in sorted_freqdist_mixed]
 
     sorted_freqdist_abstract = sorted(freqdist_abstract.items(), key=lambda x: -x[1])
-    sorted_freqdist_abstract = [(x, y, "{:.10f}%".format(y * 100 / tot_abstract))
+    sorted_freqdist_abstract = [(x, y, f"{y * 100 / tot_abstract:.10f}%")
                                 for x, y in sorted_freqdist_abstract]
 
     return sorted_freqdist_lemmatized, sorted_freqdist_mixed, sorted_freqdist_abstract
@@ -119,18 +118,16 @@ def extract_edges(corpus_filepath: str, distance: int) -> List[Any]:
 
         for verb in verbs:
             if len(tree[verb]) == distance:
-                # print(sentence[verb])
-
                 freqdist[sentence[verb][2]] += 1
                 tot += 1
 
     sorted_freqdist = sorted(freqdist.items(), key=lambda x: -x[1])
-    sorted_freqdist = [(x, y, "{:.10f}%".format(y * 100 / tot)) for x, y in sorted_freqdist]
+    sorted_freqdist = [(x, y, f"{y * 100 / tot:.10f}%") for x, y in sorted_freqdist]
 
     return sorted_freqdist
 
 
-def extract_subj_verb(corpus_filepath: str) -> Tuple[List[Any], List[Any]]:
+def extract_subj_verb(corpus_filepath: str) -> Tuple[List[Any], List[Any]]: # pylint: disable=too-many-locals
     # TODO: check shape of lists
     """_summary_
 
@@ -172,17 +169,17 @@ def extract_subj_verb(corpus_filepath: str) -> Tuple[List[Any], List[Any]]:
                 freqdist_pre[lemma] += 1
 
     sorted_freqdist_pre = sorted(freqdist_pre.items(), key=lambda x: -x[1])
-    sorted_freqdist_pre = [(x, y, "{:.10f}%".format(y * 100 / tot_pre))
+    sorted_freqdist_pre = [(x, y, f"{y * 100 / tot_pre:.10f}%")
                            for x, y in sorted_freqdist_pre]
 
     sorted_freqdist_post = sorted(freqdist_post.items(), key=lambda x: -x[1])
-    sorted_freqdist_post = [(x, y, "{:.10f}%".format(y * 100 / tot_post))
+    sorted_freqdist_post = [(x, y, f"{y * 100 / tot_post:.10f}%")
                             for x, y in sorted_freqdist_post]
 
     return sorted_freqdist_pre, sorted_freqdist_post
 
 
-def extract_subj_noun(corpus_filepath: str) -> Tuple[List[Any], List[Any]]:
+def extract_subj_noun(corpus_filepath: str) -> Tuple[List[Any], List[Any]]: # pylint: disable=too-many-locals
     # TODO: check shape of lists
     """_summary_
 
@@ -224,10 +221,10 @@ def extract_subj_noun(corpus_filepath: str) -> Tuple[List[Any], List[Any]]:
                 freqdist_pre[lemma] += 1
 
     sorted_freqdist_pre = sorted(freqdist_pre.items(), key=lambda x: -x[1])
-    sorted_freqdist_pre = [(x, y, "{:.10f}%".format(y * 100 / tot_pre)) for x, y in sorted_freqdist_pre]
+    sorted_freqdist_pre = [(x, y, f"{y * 100 / tot_pre:.10f}%") for x, y in sorted_freqdist_pre]
 
     sorted_freqdist_post = sorted(freqdist_post.items(), key=lambda x: -x[1])
-    sorted_freqdist_post = [(x, y, "{:.10f}%".format(y * 100 / tot_post)) for x, y in sorted_freqdist_post]
+    sorted_freqdist_post = [(x, y, f"{y * 100 / tot_post:.10f}%") for x, y in sorted_freqdist_post]
 
     return sorted_freqdist_pre, sorted_freqdist_post
 
@@ -256,7 +253,7 @@ def extract_pos(corpus_filepath: str, pos: str) -> List[Any]:
                 tot += 1
 
     sorted_freqdist = sorted(freqdist.items(), key=lambda x: -x[1])
-    sorted_freqdist = [(x, y, "{:.10f}%".format(y*100/tot)) for x, y in sorted_freqdist]
+    sorted_freqdist = [(x, y, f"{y*100/tot:.10f}%") for x, y in sorted_freqdist]
 
     return sorted_freqdist
 
@@ -289,7 +286,7 @@ def extract_morph(corpus_filepath: str, morph_trait: str, morph_value: str) -> L
                         tot += 1
 
     sorted_freqdist = sorted(freqdist.items(), key=lambda x: -x[1])
-    sorted_freqdist = [(x, y, "{:.10f}%".format(y*100/tot)) for x, y in sorted_freqdist]
+    sorted_freqdist = [(x, y, f"{y*100/tot:.10f}%") for x, y in sorted_freqdist]
 
     return sorted_freqdist
 
@@ -307,7 +304,7 @@ def extract_mood(corpus_filepath: str, mood: str) -> List[Any]:
     """
     tot = 0
     freqdist = collections.defaultdict(int)
-    for sentence in cutils.reader(corpus_filepath):
+    for sentence in cutils.reader(corpus_filepath): # pylint: disable=too-many-nested-blocks
         for token in sentence:
             token_pos = token[3]
             if token_pos == "VERB":
@@ -320,7 +317,7 @@ def extract_mood(corpus_filepath: str, mood: str) -> List[Any]:
                             tot += 1
 
     sorted_freqdist = sorted(freqdist.items(), key=lambda x: -x[1])
-    sorted_freqdist = [(x, y, "{:.10f}%".format(y*100/tot)) for x, y in sorted_freqdist]
+    sorted_freqdist = [(x, y, f"{y*100/tot:.10f}%") for x, y in sorted_freqdist]
 
     return sorted_freqdist
 
@@ -339,7 +336,7 @@ def extract_form(corpus_filepath: str, form: str) -> List[Any]:
 
     tot = 0
     freqdist = collections.defaultdict(int)
-    for sentence in cutils.reader(corpus_filepath):
+    for sentence in cutils.reader(corpus_filepath): # pylint: disable=too-many-nested-blocks
         for token in sentence:
             token_pos = token[3]
             if token_pos == "VERB":
@@ -351,86 +348,149 @@ def extract_form(corpus_filepath: str, form: str) -> List[Any]:
                             freqdist[token[2]] += 1
                             tot += 1
     sorted_freqdist = sorted(freqdist.items(), key=lambda x: -x[1])
-    sorted_freqdist = [(x, y, "{:.10f}%".format(y*100/tot)) for x, y in sorted_freqdist]
+    sorted_freqdist = [(x, y, f"{y*100/tot:.10f}%") for x, y in sorted_freqdist]
 
     return sorted_freqdist
 
 
-def compute_pos_distribution(output_dir: Path, corpus_dirpath: str, pos_list: List[str]) -> None:
+def compute_pos_distribution(output_dir: Path, corpus_dirpath: Path,
+                             pos_list: List[str]) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        corpus_dirpath (Path): _description_
+        pos_list (List[str]): _description_
+    """
 
     for pos in tqdm.tqdm(pos_list):
-        for filename in tqdm.tqdm(os.listdir(corpus_dirpath)):
-            if filename.endswith(".conll"):
-                logger.info("Analyzing corpus: %s", filename)
-                sorted_freqs = extract_pos(corpus_dirpath+filename, pos)
-
-                with open(output_dir.joinpath(corpus_dirpath.split("/")[-2]+"."+filename.split(".")[0]+f".{pos}"),
+        filenames_it = tqdm.tqdm(corpus_dirpath.iterdir())
+        for filename in filenames_it:
+            if filename.suffix == ".conll":
+                filenames_it.set_description(filename)
+                sorted_freqs = extract_pos(corpus_dirpath.joinpath(filename), pos)
+                corpus_dirpath_parts = corpus_dirpath.parts
+                file_basename = filename.stem
+                with open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.{pos}",
                           "w") as fout:
                     futils.print_formatted(sorted_freqs, fout)
 
 
-def compute_morph_distribution(output_dir, corpus_dirpath, trait, values_list):
+def compute_morph_distribution(output_dir: Path, corpus_dirpath: Path,
+                               trait: str, values_list: List[str]) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        corpus_dirpath (Path): _description_
+        trait (str): _description_
+        values_list (List[str]): _description_
+    """
 
     for value in tqdm.tqdm(values_list):
-        for filename in tqdm.tqdm(os.listdir(corpus_dirpath)):
-            if filename.endswith(".conll"):
-                logger.info("Analyzing corpus: %s", filename)
-                sorted_freqs = extract_morph(corpus_dirpath+filename, trait, value)
+        filenames_it = tqdm.tqdm(corpus_dirpath.iterdir())
+        for filename in filenames_it:
+            if filename.suffix == ".conll":
+                filenames_it.set_description(filename)
+                sorted_freqs = extract_morph(corpus_dirpath.joinpath(filename), trait, value)
 
-                with open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[0] +
-                          ".{}_{}".format(trait, value), "w") as fout:
+                corpus_dirpath_parts = corpus_dirpath.parts
+                file_basename = filename.stem
+                with open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.{trait}_{value}", # pylint: disable=line-too-long
+                          "w") as fout:
                     futils.print_formatted(sorted_freqs, fout)
 
 
-def compute_verbedges_distribution(output_dir, corpus_dirpath, number_edges):
-    for filename in tqdm.tqdm(os.listdir(corpus_dirpath)):
-        if filename.endswith(".conll"):
-            logger.info("Analyzing corpus: %s", filename)
-            sorted_freqs = extract_edges(corpus_dirpath + filename, number_edges)
+def compute_verbedges_distribution(output_dir: Path, corpus_dirpath: Path,
+                                   number_edges: int) -> None:
+    """_summary_
 
-            with open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[0] +
-                      ".{}edge".format(number_edges), "w") as fout:
+    Args:
+        output_dir (Path): _description_
+        corpus_dirpath (Path): _description_
+        number_edges (int): _description_
+    """
+
+    filenames_it = tqdm.tqdm(corpus_dirpath.iterdir())
+    for filename in filenames_it:
+        if filename.suffix == ".conll":
+            filenames_it.set_description(filename)
+
+            sorted_freqs = extract_edges(corpus_dirpath.joinpath(filename), number_edges)
+
+            corpus_dirpath_parts = corpus_dirpath.parts
+            file_basename = filename.stem
+            with open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.{number_edges}edge",
+                      "w") as fout:
                 futils.print_formatted(sorted_freqs, fout)
 
 
-def compute_sbj_distribution(output_dir, corpus_dirpath):
+def compute_sbj_distribution(output_dir: Path, corpus_dirpath: Path) -> None:
+    """_summary_
 
-    for filename in tqdm.tqdm(os.listdir(corpus_dirpath)):
-        if filename.endswith(".conll"):
-            logger.info("Analyzing corpus: %s", filename)
-            sorted_freqs_pre, sorted_freqs_post = extract_subj_verb(corpus_dirpath + filename)
+    Args:
+        output_dir (Path): _description_
+        corpus_dirpath (Path): _description_
+    """
 
-            with open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[0] + ".presubjverb",
+    filenames_it = tqdm.tqdm(corpus_dirpath.iterdir())
+    for filename in filenames_it:
+        if filename.suffix == ".conll":
+            filenames_it.set_description(filename)
+
+            sorted_freqs_pre,\
+            sorted_freqs_post = extract_subj_verb(corpus_dirpath.joinpath(filename))
+
+            corpus_dirpath_parts = corpus_dirpath.parts
+            file_basename = filename.stem
+
+            with open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.presubjverb",
                       "w") as fout_pre, \
-                open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[0] + ".postsubjverb",
+                open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.postsubjverb",
                      "w") as fout_post:
                 futils.print_formatted(sorted_freqs_pre, fout_pre)
                 futils.print_formatted(sorted_freqs_post, fout_post)
 
-            sorted_freqs_pre, sorted_freqs_post = extract_subj_noun(corpus_dirpath + filename)
+            sorted_freqs_pre,\
+            sorted_freqs_post = extract_subj_noun(corpus_dirpath.joinpath(filename))
 
-            with open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[0] + ".presubjnoun",
+            with open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.presubjnoun",
                       "w") as fout_pre, \
-                open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[0] + ".postsubjnoun",
+                open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.postsubjnoun",
                      "w") as fout_post:
                 futils.print_formatted(sorted_freqs_pre, fout_pre)
                 futils.print_formatted(sorted_freqs_post, fout_post)
 
 
-def compute_synrel_distribution(output_dir, corpus_dirpath, synrel_list):
+def compute_synrel_distribution(output_dir: Path, corpus_dirpath: Path,
+                                synrel_list: List[str]) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        corpus_dirpath (Path): _description_
+        synrel_list (List[str]): _description_
+    """
 
     for rel in tqdm.tqdm(synrel_list):
-        for filename in tqdm.tqdm(os.listdir(corpus_dirpath)):
-            if filename.endswith(".conll"):
-                logger.info("Analyzing corpus: %s", filename)
-                sorted_freqs_lem, sorted_freqs_mix, sorted_freqs_abs = extract_rel(corpus_dirpath+filename, rel)
+        filenames_it = tqdm.tqdm(corpus_dirpath.iterdir())
+        for filename in filenames_it:
+            if filename.suffix == ".conll":
+                filenames_it.set_description(filename)
 
-                with open(output_dir.joinpath(corpus_dirpath.split("/")[-2]+"."+filename.split(".")[0]+f".lem_{rel}"),
+                sorted_freqs_lem,\
+                sorted_freqs_mix,\
+                sorted_freqs_abs = extract_rel(corpus_dirpath.joinpath(filename), rel)
+
+                corpus_dirpath_parts = corpus_dirpath.parts
+                file_basename = filename.stem
+
+                with open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.lem_{rel}",
                           "w") as fout_lem, \
-                     open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[
-                            0] + ".mix_{}".format(rel), "w") as fout_mix, \
-                     open(output_dir + corpus_dirpath.split("/")[-2] + "." + filename.split(".")[
-                            0] + ".abs_{}".format(rel), "w") as fout_abs:
+                     open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.mix_{rel}",
+                          "w") as fout_mix, \
+                     open(output_dir / f"{corpus_dirpath_parts[-2]}.{file_basename}.abs_{rel}",
+                          "w") as fout_abs:
 
                     futils.print_formatted(sorted_freqs_lem, fout_lem)
                     futils.print_formatted(sorted_freqs_mix, fout_mix)
