@@ -1,3 +1,6 @@
+# pylint: disable=unspecified-encoding
+"""_summary_
+"""
 import logging
 import collections
 import gzip
@@ -9,10 +12,11 @@ import tqdm
 
 from scipy.stats.mstats import spearmanr
 
+
 logger = logging.getLogger(__name__)
 
 
-def correlate(output_dir: Path, filenames_list: List[str],
+def correlate(output_dir: Path, filenames_list: List[str], # pylint:disable=too-many-locals,too-many-branches
               topk: int, mi_threshold: int, fr_threshold: int) -> None:
     """_summary_
 
@@ -31,29 +35,29 @@ def correlate(output_dir: Path, filenames_list: List[str],
         with gzip.open(filename, "rt") as fin:
             catdict[filename] = {}
 
-            first_mi = 100
+            # first_mi = 100
             line = fin.readline()
 
             for line in fin:
                 linesplit = line.strip().split("\t")
                 catena = linesplit[0].lower()
                 freq = float(linesplit[1])
-                mi = float(linesplit[2])
+                mutual_information = float(linesplit[2])
                 if freq > fr_threshold:
-                    catdict[filename][catena] = mi
-                    first_mi = mi
+                    catdict[filename][catena] = mutual_information
+                    # first_mi = mutual_information
 
-    for filename in catdict:
+    for filename in catdict: # pylint:disable=consider-using-dict-items
         catdict_lists[filename] = list(sorted(catdict[filename].items(), key=lambda x: -x[1]))
 
-    for filename in catdict_lists:
+    for filename, filename_lst in catdict_lists.items():
         basename = filename.replace("/", "_")
 
-        logger.info("Catenae in {}: {}".format(filename, len(catdict_lists[filename])))
+        logger.info("Catenae in %s: %d", filename, len(filename_lst))
 
         with gzip.open(output_dir.joinpath(f"{basename}.TOP{topk}"), "wt") as fout:
-            for catena, mi in catdict_lists[filename][:topk]:
-                print(f"{catena}\t{mi}", file=fout)
+            for catena, mutual_information in filename_lst[:topk]:
+                print(f"{catena}\t{mutual_information}", file=fout)
 
     # SPEARMAN
     stats = {}
@@ -63,42 +67,43 @@ def correlate(output_dir: Path, filenames_list: List[str],
     vectors = {}
 
     with open(output_dir.joinpath("/spearmanr-TOP{topk}.txt"), "w") as fout:
-        for filename in catdict:
 
-            stats[filename] = collections.defaultdict(lambda: -1.0)
-            p_values[filename] = collections.defaultdict(lambda: -1.0)
-            keys_list.add(filename)
+        for fname1, _ in catdict.items():
 
-            dims = catdict_lists[filename][:topk]
+            stats[fname1] = collections.defaultdict(lambda: -1.0)
+            p_values[fname1] = collections.defaultdict(lambda: -1.0)
+            keys_list.add(fname1)
+
+            dims = catdict_lists[fname1][:topk]
             #print(filename, file=fout)
             #print("\t".join([x[0] for x in dims]), file=fout)
 
-            for filename2 in catdict:
-                vectors[filename] = []
-                vectors[filename2] = []
-                zeros[filename2] = 0
+            for fname2, fname2_lst in catdict.items():
+                vectors[fname1] = []
+                vectors[fname2] = []
+                zeros[fname2] = 0
 
-                for catena, mi in dims:
+                for catena, mutual_information in dims:
 
-                    vectors[filename].append(mi)
+                    vectors[fname1].append(mutual_information)
 
-                    if catena in catdict[filename2]:
-                        vectors[filename2].append(catdict[filename2][catena])
+                    if catena in fname2_lst:
+                        vectors[fname2].append(fname2_lst[catena])
                     else:
-                        vectors[filename2].append(0)
-                        zeros[filename2] += 1
+                        vectors[fname2].append(0)
+                        zeros[fname2] += 1
 
-                s, p_s = spearmanr(vectors[filename], vectors[filename2])
-                stats[filename][filename2] = s
-                p_values[filename][filename2] = p_s
+                stat_value, p_value = spearmanr(vectors[fname1], vectors[fname2])
+                stats[fname1][fname2] = stat_value
+                p_values[fname1][fname2] = p_value
 
-        for filename in stats:
-            for filename2 in stats[filename]:
-                s, p_s = stats[filename][filename2], p_values[filename][filename2]
-                print("{}\t{}\t{}\t{}".format(filename, filename2, s, p_s), file=fout)
+        for fname1 in stats: # pylint:disable=consider-using-dict-items
+            for fname2 in stats[fname1]:
+                stat_value, p_value = stats[fname1][fname2], p_values[fname1][fname2]
+                print(f"{fname1}\t{fname2}\t{stat_value}\t{p_value}", file=fout)
 
 
-def corecatenae(output_dir: Path, input_filenames_list: List[str],
+def corecatenae(output_dir: Path, input_filenames_list: List[str], # pylint:disable=too-many-locals
                 babbling_filenames_list: List[str], topk: int) -> None:
     """_summary_
 
@@ -124,13 +129,13 @@ def corecatenae(output_dir: Path, input_filenames_list: List[str],
             for line in tqdm.tqdm(fin):
                 line = line.strip().split("\t")
 
-                catena, _, mi = line
+                catena, _, mutual_information = line
 
                 if not catena in babblings:
                     babblings[catena] = [None]*len(babbling_filenames_list)
                     ranks[catena] = [None]*len(babbling_filenames_list)
 
-                babblings[catena][file_idx] = mi
+                babblings[catena][file_idx] = mutual_information
                 ranks[catena][file_idx] = i+1
 
                 i+=1
@@ -157,28 +162,29 @@ def corecatenae(output_dir: Path, input_filenames_list: List[str],
 
 
     with open(output_dir.joinpath("babblingstats.tsv"), "w") as fout:
-        s = "catena\t"
-        l = ["input_freq_"+str(i).zfill(2) for i in range(1,11)]
-        s+= "\t".join(l)+"\t"
+        composed_header = "catena\t"
 
-        l = ["babbling_mi_"+str(i).zfill(2) for i in range(1,11)]
-        s+= "\t".join(l)+"\t"
+        lst = ["input_freq_"+str(i).zfill(2) for i in range(1,11)]
+        composed_header+= "\t".join(lst)+"\t"
 
-        l = ["babbling_rank_"+str(i).zfill(2) for i in range(1,11)]
-        s+= "\t".join(l)
+        lst = ["babbling_mi_"+str(i).zfill(2) for i in range(1,11)]
+        composed_header+= "\t".join(lst)+"\t"
 
-        print(s, file=fout)
+        lst = ["babbling_rank_"+str(i).zfill(2) for i in range(1,11)]
+        composed_header+= "\t".join(lst)
 
-        for catena in babblings:
+        print(composed_header, file=fout)
+
+        for catena in babblings: # pylint:disable=consider-using-dict-items
             lst = [catena]
 
-            for i, freq in enumerate(inputs[catena]):
+            for freq in inputs[catena]:
                 lst.append(str(freq))
 
-            for i, mi in enumerate(babblings[catena]):
-                lst.append(str(mi))
+            for mutual_information in babblings[catena]:
+                lst.append(str(mutual_information))
 
-            for i, rank in enumerate(ranks[catena]):
+            for rank in ranks[catena]:
                 lst.append(str(rank))
 
             print("\t".join(lst), file=fout)
