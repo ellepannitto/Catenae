@@ -1,3 +1,5 @@
+"""_summary_
+"""
 import logging
 import collections
 import gzip
@@ -6,23 +8,33 @@ import math
 from typing import List
 from pathlib import Path
 
-import numpy as np
-import scipy as sp
-from scipy.spatial import distance
-from sklearn import metrics
-from scipy.sparse.linalg import svds, eigs
 import tqdm
-
+import numpy as np
 import filemerger.utils as fmergerutils
 
+import scipy as sp
+from scipy.sparse.linalg import svds
+from scipy.spatial import distance
+
+from sklearn import metrics
+
 from catenae.utils import data_utils as dutils
-# from FileMerger.filesmerger import utils as fmergerutils
 
 
 logger = logging.getLogger(__name__)
 
 
-def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
+def build(output_dir: Path, coocc_filepath: Path, freqs_filepath: Path, # pylint:disable=too-many-locals,too-many-statements
+          tot_freqs: int, svd_dim = 300) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        coocc_filepath (Path): _description_
+        freqs_filepath (Path): _description_
+        tot_freqs (int): _description_
+        svd_dim (int, optional): _description_. Defaults to 300.
+    """
 
     item_to_id = {}
     id_max = 0
@@ -38,14 +50,12 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
         line_cocc = fin_cocc.readline()
 
         line_freq_left = fin_freqs_left.readline()
-
         cat_l, freq_l = line_freq_left.strip().split("\t")
         freq_l = float(freq_l)
 
         line_freq_right = fin_freqs_right.readline()
         cat_r, freq_r = line_freq_right.strip().split("\t")
         freq_r = float(freq_r)
-
 
         while line_cocc:
 
@@ -72,7 +82,7 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
             assert cat1 == cat_l, "MISSING CATENA"
             assert cat2 == cat_r, "MISSING CATENA"
 
-            ppmi = freq * math.log(freq*TOT/(freq_l*freq_r))
+            ppmi = freq * math.log(freq*tot_freqs/(freq_l*freq_r))
             if ppmi > 0:
                 print(f"{cat1}\t{cat2}\t{freq}\t{ppmi}", file=fout)
 
@@ -91,32 +101,30 @@ def build(output_dir, coocc_filepath, freqs_filepath, TOT, svd_dim = 300):
             lineno += 1
 
             if not lineno % 10000:
-                logger.info(f"PROCESSING LINE %d", lineno)
+                logger.info("PROCESSING LINE %d", lineno)
 
     id_to_item = [0]*id_max
-    for item, id in item_to_id.items():
-        id_to_item[id] = item
+    for item, idx in item_to_id.items():
+        id_to_item[idx] = item
 
-    S = sp.sparse.dok_matrix((id_max, id_max), dtype=np.float32)
+    mat_s = sp.sparse.dok_matrix((id_max, id_max), dtype=np.float32)
 
     for el1 in matrix:
         for el2 in matrix[el1]:
-            S[el1, el2] = matrix[el1][el2]
+            mat_s[el1, el2] = matrix[el1][el2]
 
-    S = sp.sparse.csc_matrix(S)
-    u, s, vt = svds(S, k=svd_dim)
+    mat_s = sp.sparse.csc_matrix(mat_s)
+    mat_u, _, _ = svds(mat_s, k=svd_dim)
 
     with gzip.open(output_dir.joinpath("catenae-dsm.idx.gz"), "wt") as fout_idx, \
         gzip.open(output_dir.joinpath("catenae-dsm.vec.gz"), "wt") as fout_vec:
 
-        # el_no = 0
-        for el_no, el in enumerate(u):
-            print(id_to_item[el_no], file=fout_idx)
-            print(" ".join(str(x) for x in el), file=fout_vec)
-            # el_no += 1
+        for vec_no, vec in enumerate(mat_u):
+            print(id_to_item[vec_no], file=fout_idx)
+            print(" ".join(str(x) for x in vec), file=fout_vec)
 
 
-def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
+def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,  # pylint:disable=too-many-arguments,too-many-locals
                               left_subset_path: str, right_subset_path: str,
                               working_memory: int) -> None:
     """_summary_
@@ -139,37 +147,47 @@ def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_id
         right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
 
     vectors_to_load = None
-    if len(left_vectors_to_load) and len(right_vectors_to_load):
+    if len(left_vectors_to_load) > 0 and len(right_vectors_to_load) > 0:
         vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
 
     logger.info("Loading vectors...")
-    DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
+    dsm = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
 
     logger.info("Computing pairwise distances chunked...")
-    simmatrix = metrics.pairwise_distances_chunked(DSM, metric="cosine", working_memory=working_memory)
+    simmatrix = metrics.pairwise_distances_chunked(dsm, metric="cosine", working_memory=working_memory) # pylint:disable=line-too-long
 
     similarities_fname = output_dir.joinpath("simmatrix.sim")
 
-    it = tqdm.tqdm(enumerate(simmatrix))
-    for chunk_no, chunk in it:
+    simmatrix_it = tqdm.tqdm(enumerate(simmatrix))
+    for chunk_no, chunk in simmatrix_it:
 
         chunk_no = str(chunk_no).zfill(2)
-        it.set_description(f"Processing chunk {chunk_no}...")
+        simmatrix_it.set_description(f"Processing chunk {chunk_no}...")
 
-        logger.info(f"Processing chunk {chunk_no} ...")
         npy_similarities_fname = f"{similarities_fname}.{chunk_no}.npy"
 
         ones = np.ones(chunk.shape)
         chunk = chunk - ones
         chunk = -chunk
 
-        logger.info("Saving matrices...")
+        simmatrix_it.set_description(f"Saving matrices {chunk_no}...")
         np.save(npy_similarities_fname, chunk)
 
 
-def compute_simmatrix_and_reduce_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
+def compute_simmatrix_and_reduce_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str, # pylint:disable=too-many-arguments,too-many-locals
                                          left_subset_path: str, right_subset_path: str,
                                          working_memory: int, top_k: int) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        input_dsm_vec (str): _description_
+        input_dsm_idx (str): _description_
+        left_subset_path (str): _description_
+        right_subset_path (str): _description_
+        working_memory (int): _description_
+        top_k (int): _description_
+    """
 
     left_vectors_to_load = set()
     if not left_subset_path == "all":
@@ -180,38 +198,27 @@ def compute_simmatrix_and_reduce_chunked(output_dir: Path, input_dsm_vec: str, i
         right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
 
     vectors_to_load = None
-    if len(left_vectors_to_load) and len(right_vectors_to_load):
+    if len(left_vectors_to_load) > 0 and len(right_vectors_to_load) > 0:
         vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
 
     logger.info("Loading vectors...")
-    DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
+    dsm = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
 
     logger.info("Computing pairwise distances chunked...")
-    simmatrix = metrics.pairwise_distances_chunked(DSM, metric="cosine",
+    simmatrix = metrics.pairwise_distances_chunked(dsm, metric="cosine",
                                                    working_memory=working_memory,
                                                    n_jobs=-1)
 
-    # similarities_fname = output_dir+"simmatrix.sim"
     matrix_topk = None
     idxs_topk = None
     first_update = True
 
-    it = tqdm.tqdm(enumerate(simmatrix))
-    for chunk_no, chunk in it:
+    simmatrix_it = tqdm.tqdm(enumerate(simmatrix))
+    for chunk_no, chunk in simmatrix_it:
 
         chunk_no = str(chunk_no).zfill(2)
-        it.set_description(f"Processing chunk {chunk_no}...")
+        simmatrix_it.set_description(f"Processing chunk {chunk_no}...")
 
-        # npy_similarities_fname = f"{similarities_fname}.{chunk_no}.npy"
-
-        # logger.info("Saving matrices...")
-        # np.save(npy_similarities_fname, chunk)
-
-        # it = tqdm.tqdm(similarities_values)
-        # for filename in it:
-        #     it.set_description(f"Processing filename {filename}")
-
-        #     chunk = np.load(filename)
         ones = np.ones(chunk.shape)
         chunk = chunk - ones
         chunk = -chunk
@@ -255,30 +262,37 @@ def compute_simmatrix(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
         right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
 
     vectors_to_load = None
-    if len(left_vectors_to_load) and len(right_vectors_to_load):
+    if len(left_vectors_to_load) > 0 and len(right_vectors_to_load) > 0:
         vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
 
-    DSM = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
+    dsm = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
 
-    print("Shape of dsm: {}".format(DSM.shape))
+    logger.info("Shape of dsm: %d", dsm.shape)
 
-    simmatrix = distance.cdist(DSM, DSM, metric="cosine")
+    simmatrix = distance.cdist(dsm, dsm, metric="cosine")
     output_fname = output_dir.joinpath("simmatrix_nochunk.sim.gz")
     np.savetxt(output_fname, simmatrix)
 
 
 def reduce(output_dir: Path, similarities_values: List[str], top_k: int) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        similarities_values (List[str]): _description_
+        top_k (int): _description_
+    """
 
     matrix_topk = None
     idxs_topk = None
     first_update = True
 
-    it = tqdm.tqdm(similarities_values)
-    for filename in it:
-        it.set_description(f"Processing filename {filename}")
+    similarities_it = tqdm.tqdm(similarities_values)
+    for filename in similarities_it:
+        similarities_it.set_description(f"Processing filename {filename}")
 
         chunk = np.load(filename)
-        idxs = np.argpartition(-chunk, top_k)
+        idxs = np.argpartition(-1*chunk, top_k) # TODO: check if -chunk is the same as -1*chunk
         chunk_topk = np.take_along_axis(chunk, idxs, axis=-1)[:, :top_k]
 
         if first_update:
@@ -293,7 +307,7 @@ def reduce(output_dir: Path, similarities_values: List[str], top_k: int) -> None
     np.save(output_dir.joinpath("catenae-dsm-red.idxs.npy"), idxs_topk)
 
 
-def query_neighbors(input_dsm_sim: str, input_dsm_idx: str,
+def query_neighbors(input_dsm_sim: str, input_dsm_idx: str, # pylint:disable=too-many-locals
                     input_index: str) -> None:
     """_summary_
 
