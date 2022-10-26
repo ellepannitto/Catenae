@@ -8,7 +8,6 @@ import glob
 
 # from old_project.recurrentbabbling.utils.FileMerger.filesmerger import merge_and_collapse_pattern, merge_and_collapse_iterable
 import filemerger as fmerger
-# from FileMerger.filesmerger import core as fmerger
 
 from catenae.utils import corpus_utils as cutils
 from catenae.utils import data_utils as dutils
