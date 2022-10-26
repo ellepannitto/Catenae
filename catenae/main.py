@@ -357,10 +357,19 @@ def main() -> None:
     parser_glasscollapse.add_argument("-i", "--input-dir", required=True,
                                       help="path to input folder containing matrices")
     parser_glasscollapse.add_argument("--multiprocess", action="store_true")
+    parser_glasscollapse.add_argument("--n-workers", type=int, default=4,
+                                      help="number of processes")
+    parser_glasscollapse.add_argument("--chunksize", type=int, default=10,
+                                      help="size of chunks for multiprocess")
     parser_glasscollapse.set_defaults(func=mutils.glassify_collapse)
 
 
     args = root_parser.parse_args()
+
+    options = vars(args)
+    for arg in options:
+        logger.info("Option: %s, Value: %s", arg, getattr(options, arg))
+
     if "func" not in args:
         root_parser.print_usage()
         sys.exit()
