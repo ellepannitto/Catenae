@@ -19,6 +19,7 @@ from scipy.spatial import distance
 from sklearn import metrics
 
 from catenae.utils import data_utils as dutils
+from catenae.utils import files_utils as futils
 
 
 logger = logging.getLogger(__name__)
@@ -40,10 +41,10 @@ def build(output_dir: Path, coocc_filepath: Path, freqs_filepath: Path, # pylint
     id_max = 0
     matrix = collections.defaultdict(lambda: {})
 
-    with fmergerutils.open_file_by_extension(coocc_filepath) as fin_cocc, \
-         fmergerutils.open_file_by_extension(freqs_filepath) as fin_freqs_left, \
-         fmergerutils.open_file_by_extension(freqs_filepath) as fin_freqs_right, \
-         gzip.open(output_dir.joinpath("catenae-ppmi.gz"), "wt") as fout:
+    with fmergerutils.open_file_by_extension(futils.get_str_path(coocc_filepath)) as fin_cocc, \
+         fmergerutils.open_file_by_extension(futils.get_str_path(freqs_filepath)) as fin_freqs_left, \
+         fmergerutils.open_file_by_extension(futils.get_str_path(freqs_filepath)) as fin_freqs_right, \
+         gzip.open(output_dir / "catenae-ppmi.gz", "wt") as fout:
 
         lineno = 1
 
@@ -69,7 +70,7 @@ def build(output_dir: Path, coocc_filepath: Path, freqs_filepath: Path, # pylint
                 freq_l = float(freq_l)
 
             if cat_r > cat2:
-                fin_freqs_right = fmergerutils.open_file_by_extension(freqs_filepath)
+                fin_freqs_right = fmergerutils.open_file_by_extension(futils.get_str_path(freqs_filepath))
                 line_freq_right = fin_freqs_right.readline()
                 cat_r, freq_r = line_freq_right.strip().split("\t")
                 freq_r = float(freq_r)
@@ -116,8 +117,8 @@ def build(output_dir: Path, coocc_filepath: Path, freqs_filepath: Path, # pylint
     mat_s = sp.sparse.csc_matrix(mat_s)
     mat_u, _, _ = svds(mat_s, k=svd_dim)
 
-    with gzip.open(output_dir.joinpath("catenae-dsm.idx.gz"), "wt") as fout_idx, \
-        gzip.open(output_dir.joinpath("catenae-dsm.vec.gz"), "wt") as fout_vec:
+    with gzip.open(output_dir / "catenae-dsm.idx.gz", "wt") as fout_idx, \
+        gzip.open(output_dir / "catenae-dsm.vec.gz", "wt") as fout_vec:
 
         for vec_no, vec in enumerate(mat_u):
             print(id_to_item[vec_no], file=fout_idx)

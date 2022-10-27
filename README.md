@@ -46,7 +46,7 @@
 
 #### `udparse`
 
-#### `extract`
+#### `extract-catenae` -- IT WORKS!
 
 The script extracts list of catenae from a parsed input.
 
@@ -62,11 +62,11 @@ The script extracts list of catenae from a parsed input.
 
 Here is a working example:
 
-    catenae extract -o data/results/
-                    -c data/corpus/
-                    -m 2
-                    -M 25
-                    -f 3
+    catenae extract-catenae -o data/results/
+                            -c data/corpus/
+                            -m 2
+                            -M 25
+                            -f 3
 
 
 The above command will extract catenae of length between 0
@@ -87,27 +87,23 @@ The script will produce three gzipped files in `data/results/`:
 of each length, and the total words count for the corpus
 
 
-| **IMPORTANT**: |
-| -------------- |
-| make sure that the output folder is empty before running the command |
 
-
-#### `weight`
+#### `weight-catenae` -- IT WORKS!
 
 The script computes a weight function (MI) over a list of catenae
 and given the files created at the `extract` step.
 
-    catenae weight [-o OUTPUT_DIR]
-                   -i ITEMS_FILEPATH
-                   -t TOTALS_FILEPATH
-                   -c CATENAE_FILEPATH
+    catenae weight-catenae [-o OUTPUT_DIR]
+                           -i ITEMS_FILEPATH
+                           -t TOTALS_FILEPATH
+                           -c CATENAE_FILEPATH
 
 Here is a working example:
 
-    catenae weight -o data/results/
-                   -i data/results/items-freq-summed.gz
-                   -t data/results/totals-freq-summed.gz
-                   -c data/output_test/catenae-freq-summed.gz
+    catenae weight-catenae -o data/results/
+                           -i data/results/items-freq-summed.gz
+                           -t data/results/totals-freq-summed.gz
+                           -c data/output_test/catenae-freq-summed.gz
 
 The script will produce a file named `catenae-weighted.gz` in the output
 folder.
@@ -121,7 +117,7 @@ The file has three tab-separated columns, formatted as follows:
 |_ADP @obl       |   1041.0 | 935.3736059263747 |
 | ... | ... | ... |
 
-#### `filter`
+#### `filter-catenae` -- IT WORKS!
 
 The script filters the weighted list of catenae on frequency
 and weight.
@@ -129,22 +125,22 @@ and weight.
 The employed weighting function is a generalized version of PMI.
 
 
-    catenae filter [-o OUTPUT_DIR]
-                   -i INPUT_FILEPATH
-                   [-f MIN_FREQ]
-                   [-w MIN_WEIGHT]
-                   [-m MIN_LEN_CATENA]
-                   [-M MAX_LEN_CATENA]
+    catenae filter-catenae [-o OUTPUT_DIR]
+                           -i INPUT_FILEPATH
+                           [-f MIN_FREQ]
+                           [-w MIN_WEIGHT]
+                           [-m MIN_LEN_CATENA]
+                           [-M MAX_LEN_CATENA]
 
 
 Here is a working example:
 
-    catenae filter -o data/results/
-                   -i data/results/catenae-weighted.txt
-                   -f 100
-                   -w 0
-                   -m 0
-                   -M 3
+    catenae filter-catenae -o data/results/
+                           -i data/results/catenae-weighted.txt
+                           -f 100
+                           -w 0
+                           -m 0
+                           -M 3
 
 The script will produce a file named `catenae-filtered.txt`,
 formatted like `catenae-weighted.gz` but containing catenae with
@@ -155,35 +151,35 @@ and length between 0 and 3 (`-m` and `-M`).
 
 ### Distributional model
 
-#### `cooccurrences`
+#### `extract-cooccurrences` -- IT WORKS!
 
 The script extracts co-occurrences of catenae, to be used for
 building the distributional space.
 
 
-    catenae filter [-o OUTPUT_DIR]
-                   [-c CORPUS_DIRPATH]
-                   -a ACCEPTED_CATENAE
-                   [-k TOP_K]
-                   [-m MIN_LEN_SENTENCE]
-                   [-M MAX_LEN_SENTENCE]
-                   [-b SENTENCES_BATCH_SIZE]
-                   [-f FREQUENCY_THRESHOLD]
-                   [--min-len-catena MIN_LEN_CATENA]
-                   [--max-len-catena MAX_LEN_CATENA]
-                   [--include-len-one-items]
-                   --words-filepath WORDS_FILEPATH
+    catenae extract-cooccurrences [-o OUTPUT_DIR]
+                                  [-c CORPUS_DIRPATH]
+                                  -a ACCEPTED_CATENAE
+                                  [-k TOP_K]
+                                  [-m MIN_LEN_SENTENCE]
+                                  [-M MAX_LEN_SENTENCE]
+                                  [-b SENTENCES_BATCH_SIZE]
+                                  [-f FREQUENCY_THRESHOLD]
+                                  [--min-len-catena MIN_LEN_CATENA]
+                                  [--max-len-catena MAX_LEN_CATENA]
+                                  [--include-len-one-items]
+                                  --words-filepath WORDS_FILEPATH
 
 Here is a working example:
 
-    catenae cooccurrences -o data/cooccurrences/
-                          -c data/corpus/
-                          -a data/results/catenae-filtered.txt
-                          -m 3
-                          -b 5000
-                          -f 1
-                          --include-len-one-items
-                          --words-filepath data/results/items-freq-summed.gz
+    catenae extract-cooccurrences -o data/cooccurrences/
+                                  -c data/corpus/
+                                  -a data/results/catenae-filtered.txt
+                                  -m 3
+                                  -b 5000
+                                  -f 1
+                                  --include-len-one-items
+                                  --words-filepath data/results/items-freq-summed.gz
 
 The above command will extract cooccurrences between the catenae contained in
 `catenae-filtered.txt` and items of length one contained in `items-freq-summed.gz`
@@ -206,7 +202,7 @@ The script will produce three gzipped files in `data/cooccurrences/`:
 | make sure that the output folder is empty before running the command |
 
 
-#### `build-dsm`
+#### `build-dsm` -- IT WORKS!
 
 The script builds the distributional semantic space, given the
 files created in the `cooccurrences` step.

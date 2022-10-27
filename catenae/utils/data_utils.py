@@ -5,9 +5,12 @@ import itertools
 import gzip
 
 from typing import Set, Any, Iterable
+from pathlib import Path
 
 import tqdm
 import numpy as np
+
+from catenae.utils import files_utils as futils
 
 import filemerger.utils as fmergerutils
 # from FileMerger.filesmerger import utils as fmergerutils
@@ -31,7 +34,7 @@ def grouper(iterable: Iterable[Any], n: int, fillvalue: Any = None) -> Iterable:
     return itertools.zip_longest(*args, fillvalue=fillvalue)
 
 
-def load_catenae_set(filepath: str, topk: int, catenae_set: Set = None) -> Set:
+def load_catenae_set(filepath: Path, topk: int, catenae_set: Set[Any] = None) -> Set[Any]:
     """Load first topk catenae into a set.
 
     Args:
@@ -48,7 +51,7 @@ def load_catenae_set(filepath: str, topk: int, catenae_set: Set = None) -> Set:
     else:
         catenae = catenae_set
 
-    with fmergerutils.open_file_by_extension(filepath) as fin:
+    with fmergerutils.open_file_by_extension(futils.get_str_path(filepath)) as fin:
         fin.readline()
         for lineno, line in enumerate(fin):
             line = line.strip().split("\t")

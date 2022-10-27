@@ -2,6 +2,7 @@
 Functions to dispatch parameters to functions.
 """
 
+import sys
 import argparse
 import logging
 import logging.config
@@ -11,8 +12,8 @@ from catenae.core import dsm
 from catenae.core import corpus
 from catenae.core import analysis
 from catenae.core import glassify
+from catenae.core import statistics
 
-from catenae.core import statistics as stats
 from catenae.utils import files_utils as futils
 
 
@@ -30,7 +31,7 @@ def compute_pos_stats(args: argparse.Namespace) -> None:
     corpus_dir = futils.check_path(args.corpus_dirpath)
     pos_list = args.pos
 
-    stats.compute_pos_distribution(output_dir, corpus_dir, pos_list)
+    statistics.compute_pos_distribution(output_dir, corpus_dir, pos_list)
 
 
 def compute_morph_stats(args: argparse.Namespace) -> None:
@@ -45,7 +46,7 @@ def compute_morph_stats(args: argparse.Namespace) -> None:
     trait = args.trait
     values_list = args.values
 
-    stats.compute_morph_distribution(output_dir, corpus_dir, trait, values_list)
+    statistics.compute_morph_distribution(output_dir, corpus_dir, trait, values_list)
 
 
 def compute_verbedges_stats(args: argparse.Namespace) -> None:
@@ -59,7 +60,7 @@ def compute_verbedges_stats(args: argparse.Namespace) -> None:
     corpus_dir = futils.check_path(args.corpus_dirpath)
     edges = args.number_edges
 
-    stats.compute_verbedges_distribution(output_dir, corpus_dir, edges)
+    statistics.compute_verbedges_distribution(output_dir, corpus_dir, edges)
 
 
 def compute_sbj_stats(args: argparse.Namespace) -> None:
@@ -72,7 +73,7 @@ def compute_sbj_stats(args: argparse.Namespace) -> None:
     output_dir = futils.check_or_create_dir(args.output_dir)
     corpus_dir = futils.check_path(args.corpus_dirpath)
 
-    stats.compute_sbj_distribution(output_dir, corpus_dir)
+    statistics.compute_sbj_distribution(output_dir, corpus_dir)
 
 
 def compute_synrel_stats(args: argparse.Namespace) -> None:
@@ -86,7 +87,7 @@ def compute_synrel_stats(args: argparse.Namespace) -> None:
     corpus_dir = futils.check_path(args.corpus_dirpath)
     synrel_list = args.synrels
 
-    stats.compute_synrel_distribution(output_dir, corpus_dir, synrel_list)
+    statistics.compute_synrel_distribution(output_dir, corpus_dir, synrel_list)
 
 
 def extract_catenae(args: argparse.Namespace) -> None:
@@ -97,6 +98,9 @@ def extract_catenae(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
+    if len(list(output_dir.iterdir())) > 0:
+        sys.exit(f"ERROR: directory {output_dir} is not empty!")
+
     corpus_dir = futils.check_path(args.corpus_dirpath)
 
     min_len_sentence = args.min_len_sentence
@@ -156,6 +160,10 @@ def extract_cooccurrences(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
+    if len(list(output_dir.iterdir())) > 0:
+        sys.exit(f"ERROR: directory {output_dir} is not empty!")
+
+
     corpus_dir = futils.check_path(args.corpus_dirpath)
     accepted_catenae_filepath = futils.check_path(args.accepted_catenae)
     top_k = args.topk
@@ -346,5 +354,7 @@ def glassify_collapse(args: argparse.Namespace) -> None:
     output_dir = futils.check_or_create_dir(args.output_dir)
     input_dir = futils.check_path(args.input_dir)
     multiprocess = args.multiprocess
+    n_workers = args.n_workers
+    chunksize = args.chunksize
 
-    glassify.collapse_matrix(output_dir, input_dir, multiprocess)
+    glassify.collapse_matrix(output_dir, input_dir, multiprocess, n_workers, chunksize)

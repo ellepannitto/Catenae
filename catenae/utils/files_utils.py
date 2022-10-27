@@ -32,7 +32,7 @@ def check_path(path: str) -> Path:
     return path_obj
 
 
-def get_filenames(input_dir: str) -> Iterable[str]:
+def get_filenames(input_dir: Path) -> Iterable[Path]:
     # TODO: parametrize regex to look for
     # TODO: use in statistics instead of if.
     """Returns paths to files contained in directory.
@@ -44,8 +44,8 @@ def get_filenames(input_dir: str) -> Iterable[str]:
         Iterable[str]: List of paths to files contained in directories.
     """
 
-    if os.path.isdir(input_dir):
-        return glob.glob(input_dir+"/*", recursive=True)
+    if input_dir.is_dir():
+        return input_dir.rglob("*")
 
     return [input_dir]
 
@@ -82,3 +82,31 @@ def print_formatted(list_of_tuples: List[Tuple], file_handler: TextIO, sep: str 
 
     for tup in list_of_tuples:
         print(sep.join(tup), file=file_handler)
+
+
+def get_filenames_striterable(pathiterable: Iterable[Path]) -> Iterable[str]:
+    """_summary_
+
+    Args:
+        pathiterable (Iterable[Path]): _description_
+
+    Yields:
+        Iterator[Iterable[str]]: _description_
+    """
+
+    for filename_path in pathiterable:
+        # print(filename_path.absolute())
+        yield str(filename_path.absolute())
+
+
+def get_str_path(path: Path) -> str:
+    """Converts absolute PosixPath to string.
+
+    Args:
+        path (Path): Path object
+
+    Returns:
+        str: string describing path to location
+    """
+
+    return str(path.absolute())

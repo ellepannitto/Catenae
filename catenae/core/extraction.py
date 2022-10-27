@@ -3,7 +3,6 @@ import logging
 import collections
 import itertools
 import uuid
-import glob
 import gzip
 import math
 
@@ -17,8 +16,6 @@ from catenae.utils import files_utils as futils
 from catenae.utils import data_utils as dutils
 from catenae.utils import corpus_utils as cutils
 from catenae.utils import catenae_utils as catutils
-
-# from FileMerger.filesmerger import core as fmerger
 
 
 logger = logging.getLogger(__name__)
@@ -143,10 +140,11 @@ def process_cooccurrences(sentence, coocc_dict, catenae_freq,
             catenae_freq[str_cat_j] += 1
 
 
-def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k,
-                         min_len_sentence, max_len_sentence, sentences_batch_size,
-                         min_freq, min_len_catena, max_len_catena,
-                         include_words, words_filepath):
+def extract_coccurrences(output_dir: Path, input_dir: Path, accepted_catenae_filepath: Path,
+                         top_k: int, min_len_sentence: int, max_len_sentence: int,
+                         sentences_batch_size: int, min_freq: int,
+                         min_len_catena: int, max_len_catena: int,
+                         include_words: bool, words_filepath: Path) -> None:
 
     # TODO: add parameter for top K
     accepted_catenae = dutils.load_catenae_set(accepted_catenae_filepath, top_k)
@@ -195,21 +193,21 @@ def extract_coccurrences(output_dir, input_dir, accepted_catenae_filepath, top_k
 
             total_freqs_global += total_freqs_partial
 
-    fmerger.merge_and_collapse_iterable(glob.iglob(str(output_dir.joinpath("catenae-coocc-*"))),
-                                        output_filename=str(output_dir.joinpath("catenae-coocc-summed.gz")),
+    fmerger.merge_and_collapse_iterable(futils.get_filenames_striterable(output_dir.glob("catenae-coocc-*")),
+                                        output_filename=futils.get_str_path(output_dir / "catenae-coocc-summed.gz"),
                                         delete_input=True)
-    fmerger.merge_and_collapse_iterable(glob.iglob(str(output_dir.joinpath("catenae-freqs-*"))),
-                                        output_filename=str(output_dir.joinpath("catenae-freqs-summed.gz")),
+    fmerger.merge_and_collapse_iterable(futils.get_filenames_striterable(output_dir.glob("catenae-freqs-*")),
+                                        output_filename=futils.get_str_path(output_dir / "catenae-freqs-summed.gz"),
                                         delete_input=True)
 
-    with open(output_dir.joinpath("totals-freqs.txt"), "wt") as fout_total:
+    with open(output_dir / "totals-freqs.txt", "wt") as fout_total:
         print(f"TOTAL\t{total_freqs_global}", file=fout_total)
 
 
-def extract_catenae(output_dir, input_dir,
-                    min_len_sentence, max_len_sentence, sentences_batch_size,
-                    min_freq,
-                    min_len_catena, max_len_catena):
+def extract_catenae(output_dir: Path, input_dir: Path,
+                    min_len_sentence: int, max_len_sentence: int, sentences_batch_size:int,
+                    min_freq:int,
+                    min_len_catena:int, max_len_catena:int) -> None:
 
     filenames = futils.get_filenames(input_dir)
 
@@ -233,9 +231,9 @@ def extract_catenae(output_dir, input_dir,
                                      min_len_catena, max_len_catena)
 
             filename_uuid = str(uuid.uuid4())
-            with open(output_dir.joinpath(f"catenae-freq-{filename_uuid}"), "w") as fout_catenae, \
-                    open(output_dir.joinpath(f"items-freq-{filename_uuid}"), "w") as fout_items, \
-                    open(output_dir.joinpath(f"totals-freq-{filename_uuid}"), "w") as fout_totals:
+            with open(output_dir / f"catenae-freq-{filename_uuid}", "w") as fout_catenae, \
+                    open(output_dir / f"items-freq-{filename_uuid}", "w") as fout_items, \
+                    open(output_dir / f"totals-freq-{filename_uuid}", "w") as fout_totals:
 
                 logger.info("Sorting catenae and printing...")
 
@@ -251,16 +249,18 @@ def extract_catenae(output_dir, input_dir,
                     print(f"{item}\t{freq}", file=fout_items)
 
                 for item, freq in sorted_totalsdict:
-                    print("{item}\t{freq}", file=fout_totals)
+                    print(f"{item}\t{freq}", file=fout_totals)
 
-    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir.joinpath("catenae-freq-*")),
-                                        output_filename=output_dir.joinpath("catenae-freq-summed.gz"),
+
+
+    fmerger.merge_and_collapse_iterable(futils.get_filenames_striterable(output_dir.glob("catenae-freq-*")),
+                                        output_filename=futils.get_str_path(output_dir / "catenae-freq-summed.gz"),
                                         delete_input=True)
-    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir.joinpath("items-freq-*")),
-                                        output_filename=output_dir.joinpath("items-freq-summed.gz"),
+    fmerger.merge_and_collapse_iterable(futils.get_filenames_striterable(output_dir.glob("items-freq-*")),
+                                        output_filename=futils.get_str_path(output_dir / "items-freq-summed.gz"),
                                         delete_input=True)
-    fmerger.merge_and_collapse_iterable(glob.iglob(output_dir.joinpath("totals-freq-*")),
-                                        output_filename=output_dir.joinpath("totals-freq-summed.gz"),
+    fmerger.merge_and_collapse_iterable(futils.get_filenames_striterable(output_dir.glob("totals-freq-*")),
+                                        output_filename=futils.get_str_path(output_dir / "totals-freq-summed.gz"),
                                         delete_input=True)
 
 
@@ -325,12 +325,13 @@ def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold
                    min_len_catena, max_len_catena):
 
     with gzip.open(input_file, "rt") as fin, \
-        open(output_dir.joinpath("catenae-filtered.txt"), "w") as fout, \
-        open(output_dir.joinpath("catenae-lenone.txt"), "w") as fout_words:
+        open(output_dir / "catenae-filtered.txt", "w") as fout, \
+        open(output_dir / "catenae-lenone.txt", "w") as fout_words:
 
         print(fin.readline().strip(), file=fout)
         print(fin.readline().strip(), file=fout_words)
-        for line in fin:
+
+        for line in tqdm.tqdm(fin):
             line = line.strip().split("\t")
             catena, freq, weight = line
             catena = catena.split("|")
@@ -366,10 +367,9 @@ def extract_sentences(output_dir: Path, input_dir: str, catenae_list: List[str])
         fout_list_sents[catena] = open(output_dir.joinpath(" ".join(catena_split)+".sentences"), "w") # pylint:disable=line-too-long
         fout_list_cats[catena] = open(output_dir.joinpath(" ".join(catena_split)+".cat"), "w")
 
-    input_files = glob.glob(input_dir+"/*")
-    for input_file in tqdm.tqdm(input_files):
 
-        sentences_it = tqdm.tqdm(enumerate(cutils.plain_conll_reader(input_file,
+    for input_file in tqdm.tqdm(input_dir.iterdir()):
+        sentences_it = tqdm.tqdm(enumerate(cutils.plain_conll_reader(input_file.absolute(),
                                                                      min_len=1, max_len=25)))
 
         for _, sentence in sentences_it:
