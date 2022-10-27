@@ -10,9 +10,12 @@ import logging
 import glob
 import random
 
+from pathlib import Path
+
 import ufal.udpipe as udpipe # pylint: disable=consider-using-from-import
 
 from catenae.utils import corpus_utils as cutils
+from catenae.utils import files_utils as futils
 
 
 logger = logging.getLogger(__name__)
@@ -109,22 +112,21 @@ def print_to_file(sentences_idxs, files, output_path, basename):
                         break
 
 
-def parse(output_dir, input_dir, model_path):
+def parse(output_dir: Path, input_dir: Path, model_path: Path) -> None:
 
-    model = udpipe.Model.load(model_path)
+    model = udpipe.Model.load(futils.get_str_path(model_path))
 
     pipeline = udpipe.Pipeline(model, "horizontal",
                                udpipe.Pipeline.DEFAULT, udpipe.Pipeline.DEFAULT, "conllu")
     error = udpipe.ProcessingError()
 
     # Read whole input
-    for filename in os.listdir(input_dir):
-        basename = filename.split(".")[0]
+    for filename in input_dir.iterdir():
+        basename = filename.stem
 
         logger.info("processing file %s/%s", input_dir, filename)
 
-        with open(input_dir / filename) as fin, \
-            open(output_dir.joinpath(f"{basename}.conllu"), "w") as fout:
+        with open(filename) as fin, open(output_dir / f"{basename}.conllu", "w") as fout:
             text = ''.join(fin.readlines())
 
             # Process data

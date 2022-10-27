@@ -44,20 +44,74 @@
 
 ### From corpus to catenae
 
-#### `udparse`
+#### `udparse` -- IT WORKS!
+
+The script parses a linear version of the corpus using Universal Dependencies formalism.
+
+    catenae udparse [-o OUTPUT_DIR]
+                    -i INPUT_DIR
+                    -m MODEL
+
+Here is a working example:
+
+    catenae udparse -o data/corpus_parsed
+                    -i data/linear_corpus
+                    -m data/udpipe_models/english-ewt-ud-2.3-181115.udpipe
+
+The file loads a UDPipe model and parses all (tokenized) input files into the `.conllu` format.
+
+Example of input format:
+
+    MOT	what 's that
+    MOT	it 's a chicken
+    CHI	yeah
+    MOT	yeah
+    MOT	what 's this
+
+Corresponding parsed format provided in output:
+
+(Note: labels as MOT and CHI are removed in working version of the script. They've been kept here just for sake of simplicity)
+
+    # sent_id = 3
+    1	MOT	Mot	CCONJ	CC	_	2	cc	_	_
+    2	what	what	PRON	WP	PronType=Int	3	nsubj	_	_
+    3	's	be	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+    4	that	that	PRON	DT	Number=Sing|PronType=Dem	3	nsubj	_	_
+
+    # sent_id = 4
+    1	MOT	Mot	CCONJ	CC	_	5	cc	_	_
+    2	it	it	PRON	PRP	Case=Nom|Gender=Neut|Number=Sing|Person=3|PronType=Prs	5	nsubj	_	_
+    3	's	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	5	cop	_	_
+    4	a	a	DET	DT	Definite=Ind|PronType=Art	5	det	_	_
+    5	chicken	chicken	NOUN	NN	Number=Sing	0	root	_	_
+
+    # sent_id = 5
+    1	CHI	chi	INTJ	UH	_	0	root	_	_
+    2	yeah	yeah	INTJ	UH	_	1	discourse	_	_
+
+    # sent_id = 6
+    1	MOT	Mot	PART	RB	_	0	root	_	_
+    2	yeah	yeah	INTJ	UH	_	1	discourse	_	_
+
+    # sent_id = 7
+    1	MOT	Mot	CCONJ	CC	_	2	cc	_	_
+    2	what	what	PRON	WP	PronType=Int	0	root	_	_
+    3	's	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	2	cop	_	_
+    4	this	this	PRON	DT	Number=Sing|PronType=Dem	2	nsubj	_	_
+
 
 #### `extract-catenae` -- IT WORKS!
 
 The script extracts list of catenae from a parsed input.
 
-    catenae extract [-o OUTPUT_DIR]
-                     [-c CORPUS_DIRPATH]
-                     [-m MIN_LEN_SENTENCE]
-                     [-M MAX_LEN_SENTENCE]
-                     [-b SENTENCES_BATCH_SIZE]
-                     [-f FREQUENCY_THRESHOLD]
-                     [--min-len-catena MIN_LEN_CATENA]
-                     [--max-len-catena MAX_LEN_CATENA]
+    catenae extract-catenae [-o OUTPUT_DIR]
+                            [-c CORPUS_DIRPATH]
+                            [-m MIN_LEN_SENTENCE]
+                            [-M MAX_LEN_SENTENCE]
+                            [-b SENTENCES_BATCH_SIZE]
+                            [-f FREQUENCY_THRESHOLD]
+                            [--min-len-catena MIN_LEN_CATENA]
+                            [--max-len-catena MAX_LEN_CATENA]
 
 
 Here is a working example:
@@ -197,10 +251,6 @@ The script will produce three gzipped files in `data/cooccurrences/`:
 * `totals-freqs.txt` containing total count of items in the corpus
   (used in the next step to compute MI)
 
-| **IMPORTANT**: |
-| -------------- |
-| make sure that the output folder is empty before running the command |
-
 
 #### `build-dsm` -- IT WORKS!
 
@@ -227,6 +277,7 @@ file also created during the previous step.
 This step will produce two files:
 * `catenae-ppmi.gz` containing a weighted version of raw cooccurrences
 * `catenae-dsm.gz` containing the implicit vectors reduced to 300 dimensions
+
 
 #### `similarity-matrix`
 

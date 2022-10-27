@@ -226,8 +226,8 @@ def main() -> None:
                                            formatter_class=ArgumentDefaultsHelpFormatter)
     parser_udparse.add_argument("-o", "--output-dir", default="data/output_parsed/",
                                help="path to output dir, default is data/output_parsed/")
-    parser_udparse.add_argument("-i", "--input-dir", default="data/input/",
-                               help="path to output dir, default is data/input/")
+    parser_udparse.add_argument("-i", "--input-dir", required=True,
+                               help="path to input dir")
     parser_udparse.add_argument("-m", "--model", required=True,
                                 help="path to file containing model for udpipe lib")
     parser_udparse.set_defaults(func=mutils.udparse)

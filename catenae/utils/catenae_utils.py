@@ -54,7 +54,7 @@ def rel_admitted(rel: str, rels_to_exclude: List[str] = RELS_TO_EXCLUDE) -> bool
     return rel not in rels_to_exclude
 
 
-def recursive_catenae_extraction(A, tree_children, min_len_catena, max_len_catena):
+def recursive_catenae_extraction(A, tree_children, min_len_catena, max_len_catena): # pylint: disable=invalid-name
     """_summary_
 
     Args:
@@ -76,13 +76,13 @@ def recursive_catenae_extraction(A, tree_children, min_len_catena, max_len_caten
     list_of_indep_catenae = [[[A]]]
 
     for a_child in tree_children[A]:
-        c, all_c = recursive_catenae_extraction(a_child, tree_children,
+        c, all_c = recursive_catenae_extraction(a_child, tree_children, # pylint: disable=invalid-name
                                                 min_len_catena, max_len_catena)
 
         found_catenae += all_c
         list_of_indep_catenae.append([[None]] + c)
 
-    X = []
+    X = [] # pylint: disable=invalid-name
     for tup in itertools.product(*list_of_indep_catenae):
         new_catena = list(sorted(filter(lambda x: x is not None, sum(tup, []))))
         if min_len_catena <= len(new_catena) <= max_len_catena:
