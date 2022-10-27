@@ -366,9 +366,15 @@ def main() -> None:
 
     args = root_parser.parse_args()
 
+
+    # printing summary of parameters
     options = vars(args)
-    for arg in options:
-        logger.info("Option: %s, Value: %s", arg, getattr(options, arg))
+    summary_str = f"CALLING {options['actions']} WITH PARAMETERS:\n"
+    for arg_name, arg_value in options.items():
+        if not arg_name in ["func", "actions"]:
+            summary_str+=f"\t{arg_name}\t\t--- VALUE: {arg_value}\n"
+    print(summary_str)
+
 
     if "func" not in args:
         root_parser.print_usage()
