@@ -203,6 +203,28 @@ and length between 0 and 3 (`-m` and `-M`).
 
 ---
 
+### Preparing for babbling
+
+#### `sample-input`
+
+The script samples a `train`, `development` and `test` set from a set of input files.
+
+    catenae sample-input [-o OUTPUT_DIR]
+                         -c CORPUS_DIRPAHT
+                         -s SIZE
+                         --seed RANDOM_SEED
+
+Here is a working example:
+
+    catenae sample-input -o data/input_sampled/
+                         -c data/input_test/
+                         -s 3000
+
+The above command will create `train`, `valid` and `test` files in the `data/input_sampled/`
+folder, both in linear version (`.txt` extension) and parsed version (`.conll` extension).
+
+---
+
 ### Distributional model
 
 #### `extract-cooccurrences` -- IT WORKS!
@@ -310,7 +332,7 @@ Here is a working example:
 
 | IMPORTANT |
 -----
-The catenae contained in the files used as `reduced-left-matrix` and `reduced-right-matrix` should be subsets of the catenae contained in the file `DSM_IDX`. It is not mandatory that the order in which they appear in the file is the same, nonetheless there cannot be catenae in `reduced-[left|right]-matrix` that do not appear in the `DSM_IDX` file.
+The catenae contained in the files used as `reduced-left-matrix` and `reduced-right-matrix` should be subsets of the catenae contained in the file `DSM_IDX`. It is not mandatory that the order in which they appear in the file is the same, nonetheless there cannot be catenae in `reduced-[left\|right]-matrix` file that do not appear in the `DSM_IDX` file.
 
 The above command will create various files in the designated output folder.
 More specifically:
@@ -323,28 +345,6 @@ More specifically:
 #### `reduce-matrix`
 
 #### `query-neighbors`
-
----
-
-### Preparing for babbling
-
-#### `sample-input`
-
-The script samples a `train`, `development` and `test` set from a set of input files.
-
-    catenae sample-input [-o OUTPUT_DIR]
-                         -c CORPUS_DIRPAHT
-                         -s SIZE
-                         --seed RANDOM_SEED
-
-Here is a working example:
-
-    catenae sample-input -o data/input_sampled/
-                         -c data/input_test/
-                         -s 3000
-
-The above command will create `train`, `valid` and `test` files in the `data/input_sampled/`
-folder, both in linear version (`.txt` extension) and parsed version (`.conll` extension).
 
 ---
 
