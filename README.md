@@ -280,7 +280,7 @@ This step will produce three files:
 * `catenae-dsm.vec.gz` containing the implicit vectors reduced to 300 dimensions
 
 
-#### `similarity-matrix`
+#### `similarity-matrix` -- IT WORKS!
 
 The script computes a matrix containing **cosine similarities** between pairs of vectors in the
 distributional model built with the command `build-dsm`.
@@ -307,6 +307,18 @@ Here is a working example:
                                 --reduced-right-matrix data/catenae_subsets/right_catenae.txt
                                 --chunked
                                 --working-memory 2000
+
+| IMPORTANT |
+-----
+The catenae contained in the files used as `reduced-left-matrix` and `reduced-right-matrix` should be subsets of the catenae contained in the file `DSM_IDX`. It is not mandatory that the order in which they appear in the file is the same, nonetheless there cannot be catenae in `reduced-[left|right]-matrix` that do not appear in the `DSM_IDX` file.
+
+The above command will create various files in the designated output folder.
+More specifically:
+* `idxs.left` and `idxs.right`, in case the options `--reduced-[left|right]-matrix` are used, containing the sorted list of catenae, each one corresponding to a row or column in the similarity matrix (`idxs.left` for row indexes, `idxs.right` for column indexes).
+
+* If the `--chunked` option is provided, a number of `simmatrix.*.npy` files are produced, each one containing a chunk of the similarity matrix in numpy format.
+
+* If the `--chunked` option is not provided, a `single simmatrix.npy` file is, containing the entire similarity matrix.
 
 #### `reduce-matrix`
 
