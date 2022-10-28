@@ -289,13 +289,8 @@ def compute_simmatrix(args: argparse.Namespace) -> None:
     left_subset_path = futils.check_path(args.reduced_left_matrix)
     right_subset_path = futils.check_path(args.reduced_right_matrix)
     working_memory = args.working_memory
-    top_k = args.top_k
 
-    if args.chunked and args.reduced:
-        dsm.compute_simmatrix_and_reduce_chunked(output_dir, input_dsm_vec, input_dsm_idx,
-                                                 left_subset_path, right_subset_path,
-                                                 working_memory, top_k)
-    elif args.chunked:
+    if args.chunked:
         dsm.compute_simmatrix_chunked(output_dir, input_dsm_vec, input_dsm_idx,
                                       left_subset_path, right_subset_path,
                                       working_memory)

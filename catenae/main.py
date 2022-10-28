@@ -298,11 +298,6 @@ def main() -> None:
                                   help="set to True for chunked version, ram-memory efficient")
     parser_simmatrix.add_argument("--working-memory", default=16_000, type=int,
                                   help="Working memory (MiB) for pairwise computation")
-    parser_simmatrix.add_argument("--reduced", action="store_true",
-                                  help="set to True for reduced version, disk-memory efficient.\
-                                  ONLY WORKS WITH CHUNKED VERSION")
-    parser_simmatrix.add_argument("-k", "--top-k", default=10_000, type=int,
-                                  help="number of dimensions to keep")
     parser_simmatrix.set_defaults(func=mutils.compute_simmatrix)
 
     # Reduce similarity matrix to top-k neighbors

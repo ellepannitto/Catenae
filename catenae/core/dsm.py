@@ -5,7 +5,7 @@ import collections
 import gzip
 import math
 
-from typing import List
+from typing import List, Union
 from pathlib import Path
 
 import tqdm
@@ -125,8 +125,21 @@ def build(output_dir: Path, coocc_filepath: Path, freqs_filepath: Path, # pylint
             print(" ".join(str(x) for x in vec), file=fout_vec)
 
 
-def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,  # pylint:disable=too-many-arguments,too-many-locals
-                              left_subset_path: str, right_subset_path: str,
+def load_subsets(left_path: Union[str, Path], right_path: Union[str, Path]): #TODO: I hate this function
+
+    left_vectors_to_load = set()
+    if not left_path == "all":
+        left_vectors_to_load = dutils.load_catenae_set(left_path, math.inf)
+
+    right_vectors_to_load = set()
+    if not right_path == "all":
+        right_vectors_to_load = dutils.load_catenae_set(right_path, math.inf)
+
+    return left_vectors_to_load, right_vectors_to_load
+
+
+def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: Path, input_dsm_idx: Path,  # pylint:disable=too-many-arguments,too-many-locals
+                              left_subset_path: Union[str, Path], right_subset_path: Union[str, Path], # pylint:disable=line-too-long
                               working_memory: int) -> None:
     """_summary_
 
@@ -139,25 +152,51 @@ def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_id
         working_memory (int): _description_
     """
 
-    left_vectors_to_load = set()
-    if not left_subset_path == "all":
-        left_vectors_to_load = dutils.load_catenae_set(left_subset_path, math.inf)
+    left_vectors_to_load, right_vectors_to_load = load_subsets(left_subset_path, right_subset_path)
 
-    right_vectors_to_load = set()
-    if not right_subset_path == "all":
-        right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
+    dutils.dump_idxs(output_dir / "idxs.left", input_dsm_idx, left_vectors_to_load)
+    dutils.dump_idxs(output_dir / "idxs.right", input_dsm_idx, right_vectors_to_load)
+    logger.info("Printed list of loaded vectors")
 
-    vectors_to_load = None
-    if len(left_vectors_to_load) > 0 and len(right_vectors_to_load) > 0:
-        vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
+    _, cat_to_idx = dutils.load_map(input_dsm_idx)
 
-    logger.info("Loading vectors...")
-    dsm = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
+    left_vectors_to_load = set(cat_to_idx[catena] for catena in left_vectors_to_load) #TODO: add disclaimer, the provided set should be a subset of the larger one
+    right_vectors_to_load = set(cat_to_idx[catena] for catena in right_vectors_to_load)
+
+    full_vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
+
+    dsm = dutils.load_vectors(input_dsm_vec, full_vectors_to_load)
+    logger.info("Loaded DSM of shape: %d, %d", dsm.shape[0], dsm.shape[1])
+
+    left_vectors_to_load, right_vectors_to_load = dutils.remap(full_vectors_to_load,
+                                                               left_vectors_to_load,
+                                                               right_vectors_to_load)
 
     logger.info("Computing pairwise distances chunked...")
-    simmatrix = metrics.pairwise_distances_chunked(dsm, metric="cosine", working_memory=working_memory) # pylint:disable=line-too-long
+    if len(left_vectors_to_load) > 0 and len(right_vectors_to_load) > 0:
+        left_dsm = dutils.selectrows(dsm, left_vectors_to_load)
+        right_dsm = dutils.selectrows(dsm, right_vectors_to_load)
 
-    similarities_fname = output_dir.joinpath("simmatrix.sim")
+        simmatrix = metrics.pairwise_distances_chunked(left_dsm, right_dsm,
+                                                       metric="cosine",
+                                                       working_memory=working_memory)
+
+    elif len(left_vectors_to_load) > 0:
+        left_dsm = dutils.selectrows(dsm, left_vectors_to_load)
+        simmatrix = metrics.pairwise_distances_chunked(left_dsm, dsm,
+                                                       metric="cosine",
+                                                       working_memory=working_memory)
+
+    elif len(right_vectors_to_load) > 0:
+        right_dsm = dutils.selectrows(dsm, right_vectors_to_load)
+        simmatrix = metrics.pairwise_distances_chunked(dsm, right_dsm,
+                                                       metric="cosine",
+                                                       working_memory=working_memory)
+
+    else:
+        simmatrix = metrics.pairwise_distances_chunked(dsm, dsm,
+                                                       metric="cosine",
+                                                       working_memory=working_memory)
 
     simmatrix_it = tqdm.tqdm(enumerate(simmatrix))
     for chunk_no, chunk in simmatrix_it:
@@ -165,86 +204,20 @@ def compute_simmatrix_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_id
         chunk_no = str(chunk_no).zfill(2)
         simmatrix_it.set_description(f"Processing chunk {chunk_no}...")
 
-        npy_similarities_fname = f"{similarities_fname}.{chunk_no}.npy"
+        npy_similarities_fname = output_dir / f"simmatrix.{chunk_no}.npy"
 
+        # from cosine distance to cosine similarity
         ones = np.ones(chunk.shape)
         chunk = chunk - ones
-        chunk = -chunk
+        chunk = -1*chunk
 
         simmatrix_it.set_description(f"Saving matrices {chunk_no}...")
         np.save(npy_similarities_fname, chunk)
 
 
-def compute_simmatrix_and_reduce_chunked(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str, # pylint:disable=too-many-arguments,too-many-locals
-                                         left_subset_path: str, right_subset_path: str,
-                                         working_memory: int, top_k: int) -> None:
-    """_summary_
-
-    Args:
-        output_dir (Path): _description_
-        input_dsm_vec (str): _description_
-        input_dsm_idx (str): _description_
-        left_subset_path (str): _description_
-        right_subset_path (str): _description_
-        working_memory (int): _description_
-        top_k (int): _description_
-    """
-
-    left_vectors_to_load = set()
-    if not left_subset_path == "all":
-        left_vectors_to_load = dutils.load_catenae_set(left_subset_path, math.inf)
-
-    right_vectors_to_load = set()
-    if not right_subset_path == "all":
-        right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
-
-    vectors_to_load = None
-    if len(left_vectors_to_load) > 0 and len(right_vectors_to_load) > 0:
-        vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
-
-    logger.info("Loading vectors...")
-    dsm = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
-
-    logger.info("Computing pairwise distances chunked...")
-    simmatrix = metrics.pairwise_distances_chunked(dsm, metric="cosine",
-                                                   working_memory=working_memory,
-                                                   n_jobs=-1)
-
-    matrix_topk = None
-    idxs_topk = None
-    first_update = True
-
-    simmatrix_it = tqdm.tqdm(enumerate(simmatrix))
-    for chunk_no, chunk in simmatrix_it:
-
-        chunk_no = str(chunk_no).zfill(2)
-        simmatrix_it.set_description(f"Processing chunk {chunk_no}...")
-
-        ones = np.ones(chunk.shape)
-        chunk = chunk - ones
-        chunk = -chunk
-
-        logger.info("Argpartition...")
-        idxs = np.argpartition(-chunk, top_k)
-
-        logger.info("Extracting submatrix...")
-        chunk_topk = np.take_along_axis(chunk, idxs, axis=-1)[:, :top_k]
-
-        if first_update:
-            matrix_topk = chunk_topk.copy()
-            idxs_topk = idxs[:, :top_k]
-            first_update = False
-        else:
-            matrix_topk = np.vstack((matrix_topk, chunk_topk))
-            idxs_topk = np.vstack((idxs_topk, idxs[:, :top_k]))
-
-    logger.info("Saving vectors...")
-    np.save(output_dir.joinpath("catenae-dsm-red.sim.npy"), matrix_topk)
-    np.save(output_dir.joinpath("catenae-dsm-red.idxs.npy"), idxs_topk)
-
-
-def compute_simmatrix(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
-                      left_subset_path: str, right_subset_path: str) -> None:
+def compute_simmatrix(output_dir: Path, input_dsm_vec: Path, input_dsm_idx: Path,
+                      left_subset_path: Union[str, Path],
+                      right_subset_path: Union[str, Path]) -> None:
     """_summary_
 
     Args:
@@ -254,25 +227,57 @@ def compute_simmatrix(output_dir: Path, input_dsm_vec: str, input_dsm_idx: str,
         right_subset_path (str): _description_
     """
 
-    left_vectors_to_load = set()
-    if not left_subset_path == "all":
-        left_vectors_to_load = dutils.load_catenae_set(left_subset_path, math.inf)
+    left_vectors_to_load, right_vectors_to_load = load_subsets(left_subset_path, right_subset_path)
 
-    right_vectors_to_load = set()
-    if not right_subset_path == "all":
-        right_vectors_to_load = dutils.load_catenae_set(right_subset_path, math.inf)
+    dutils.dump_idxs(output_dir / "idxs.left", input_dsm_idx, left_vectors_to_load)
+    dutils.dump_idxs(output_dir / "idxs.right", input_dsm_idx, right_vectors_to_load)
+    logger.info("Printed list of loaded vectors")
 
-    vectors_to_load = None
+    _, cat_to_idx = dutils.load_map(input_dsm_idx)
+
+    left_vectors_to_load = set(cat_to_idx[catena] for catena in left_vectors_to_load) #TODO: add disclaimer, the provided set should be a subset of the larger one
+    right_vectors_to_load = set(cat_to_idx[catena] for catena in right_vectors_to_load)
+
+    full_vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
+
+    dsm = dutils.load_vectors(input_dsm_vec, full_vectors_to_load)
+    logger.info("Loaded DSM of shape: %d, %d", dsm.shape[0], dsm.shape[1])
+
+    left_vectors_to_load, right_vectors_to_load = dutils.remap(full_vectors_to_load,
+                                                               left_vectors_to_load,
+                                                               right_vectors_to_load)
+
+    logger.info("Computing pairwise distances chunked...")
     if len(left_vectors_to_load) > 0 and len(right_vectors_to_load) > 0:
-        vectors_to_load = left_vectors_to_load.union(right_vectors_to_load)
+        left_dsm = dutils.selectrows(dsm, left_vectors_to_load)
+        right_dsm = dutils.selectrows(dsm, right_vectors_to_load)
 
-    dsm = dutils.load_vectors(input_dsm_vec, input_dsm_idx, vectors_to_load)
+        simmatrix = distance.cdist(left_dsm, right_dsm,
+                                   metric="cosine")
 
-    logger.info("Shape of dsm: %d", dsm.shape)
+    elif len(left_vectors_to_load) > 0:
+        left_dsm = dutils.selectrows(dsm, left_vectors_to_load)
+        simmatrix = distance.cdist(left_dsm, dsm,
+                                   metric="cosine")
 
-    simmatrix = distance.cdist(dsm, dsm, metric="cosine")
-    output_fname = output_dir.joinpath("simmatrix_nochunk.sim.gz")
-    np.savetxt(output_fname, simmatrix)
+    elif len(right_vectors_to_load) > 0:
+        right_dsm = dutils.selectrows(dsm, right_vectors_to_load)
+        simmatrix = distance.cdist(right_dsm, dsm,
+                                   metric="cosine")
+
+    else:
+        simmatrix = distance.cdist(dsm, dsm,
+                                   metric="cosine")
+
+    # from cosine distance to cosine similarity
+    ones = np.ones(simmatrix.shape)
+    simmatrix = simmatrix - ones
+    simmatrix = -1*simmatrix
+    logger.info("Computed similarity")
+
+    output_fname = output_dir / "simmatrix.npy"
+    np.save(output_fname, simmatrix)
+    logger.info("Matrix saved to %s", str(output_fname))
 
 
 def reduce(output_dir: Path, similarities_values: List[str], top_k: int) -> None:
@@ -308,14 +313,8 @@ def reduce(output_dir: Path, similarities_values: List[str], top_k: int) -> None
     np.save(output_dir.joinpath("catenae-dsm-red.idxs.npy"), idxs_topk)
 
 
-def query_neighbors(input_dsm_sim: str, input_dsm_idx: str, # pylint:disable=too-many-locals
+def query_neighbors(input_dsm_sim: Path, input_dsm_idx: Path, # pylint:disable=too-many-locals
                     input_index: str) -> None:
-    """_summary_
-
-    Args:
-        input_dsm_sim_str (_type_): _description_
-        input_dsm_idx (str): _description_
-    """
 
     idx_to_cat = {}
     cat_to_idx = {}

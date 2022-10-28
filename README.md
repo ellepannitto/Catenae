@@ -274,12 +274,39 @@ extracted during the previous step. In particular, files `catenae-coocc-summed.g
 and `catenae-freqs-summed.gz` are those created by the `cooccurrences` command,
 while the integer to be used as `-t` parameter is to be found in the `totals-freqs.txt`
 file also created during the previous step.
-This step will produce two files:
+This step will produce three files:
 * `catenae-ppmi.gz` containing a weighted version of raw cooccurrences
-* `catenae-dsm.gz` containing the implicit vectors reduced to 300 dimensions
+* `catenae-dsm.idx.gz` containing the vocabulary for the implicit vectors reduced to 300 dimensions
+* `catenae-dsm.vec.gz` containing the implicit vectors reduced to 300 dimensions
 
 
 #### `similarity-matrix`
+
+The script computes a matrix containing **cosine similarities** between pairs of vectors in the
+distributional model built with the command `build-dsm`.
+
+As computing the full similarity matrix is potentially both highly space and time consuming,
+the command allows for multiple options:
+* it is possible to specify the subset of vectors we want to consider for computing similarity
+* both a `full` and a `chunked` version are available. The chunked version is slower but memory-efficient.
+
+      catenae similarity-matrix [-o OUTPUT_DIR]
+                                -s DSM_VEC
+                                -i DSM_IDX
+                                [--reduced-left-matrix]
+                                [--reduced-right-matrix]
+                                [--chunked]
+                                [--working-memory]
+
+Here is a working example:
+
+      catenae similarity-matrix -o data/output_simmatrix/
+                                -s data/output_dsm/catenae-dsm.vec.gz
+                                -i data/output_dsm/catenae-dsm.idx.gz
+                                --reduced-left-matrix data/catenae_subsets/left_catenae.txt
+                                --reduced-right-matrix data/catenae_subsets/right_catenae.txt
+                                --chunked
+                                --working-memory 2000
 
 #### `reduce-matrix`
 
