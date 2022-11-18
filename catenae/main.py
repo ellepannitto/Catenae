@@ -336,7 +336,7 @@ def main() -> None:
     parser_glassmatrix.add_argument("-o", "--output-dir", default="data/output_glass/",
                                     help="path to output dir, default is data/output_glass/")
     parser_glassmatrix.add_argument("-i", "--input", required=True,
-                                    help="path to input file in CoNLL format")
+                                    help="path to input directory containin files in CoNLL format")
     parser_glassmatrix.add_argument("-c", "--catenae", required=True,
                                     help="path to file containing catenae")
     parser_glassmatrix.set_defaults(func=mutils.glassify_matrix)

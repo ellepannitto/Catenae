@@ -4,14 +4,14 @@
 Returns:
     _type_: _description_
 """
-import os
 import sys
 import logging
-import glob
 import random
 
+from typing import List
 from pathlib import Path
 
+import tqdm
 import ufal.udpipe as udpipe # pylint: disable=consider-using-from-import
 
 from catenae.utils import corpus_utils as cutils
@@ -21,7 +21,17 @@ from catenae.utils import files_utils as futils
 logger = logging.getLogger(__name__)
 
 
-def reservoir_tokens_number(files, size, seed=42):
+def reservoir_tokens_number(files: List[Path], size: int, seed: int=42) -> List[int]:
+    """Perform reservoir sampling from a list of files each containing multiple sentences.
+
+    Args:
+        files (List[Path]): list of files in input
+        size (int): number of words to consider
+        seed (int, optional): random seed. Defaults to 42.
+
+    Returns:
+        List[int]: list of indexes of sentences to be included in the sample
+    """
 
     random.seed(seed)
 
@@ -30,7 +40,9 @@ def reservoir_tokens_number(files, size, seed=42):
 
     considered_tokens = 0
     sentence_number = -1
-    for filename in files:
+
+    for filename in tqdm.tqdm(files):
+
         logger.info("reading file %s", filename)
 
         for sentence in cutils.plain_conll_reader(filename):
@@ -56,9 +68,17 @@ def reservoir_tokens_number(files, size, seed=42):
     return list(sorted(res[:cur_len]))
 
 
-def sample(output_dir, input_dir, size, seed):
+def sample(output_dir: Path, input_dir: Path, size: int, seed: int) -> None:
+    """Sample random sentences from input files.
 
-    input_files = glob.glob(input_dir+"/*")
+    Args:
+        output_dir (Path): Output directory
+        input_dir (Path): Directory containing input files in CoNLL format
+        size (int): Number of words to sample
+        seed (int): random seed
+    """
+
+    input_files = list(input_dir.iterdir())
     random.Random(seed).shuffle(input_files)
 
     L = len(input_files) # pylint:disable=invalid-name
@@ -84,14 +104,24 @@ def sample(output_dir, input_dir, size, seed):
     print_to_file(sentences_for_test, test_files, output_dir, "test")
 
 
-def print_to_file(sentences_idxs, files, output_path, basename):
+def print_to_file(sentences_idxs: List[int], files: List[Path], output_path: Path,
+                  basename: str) -> None:
+    """Print sentences to file based on their progressive index.
+
+    Args:
+        sentences_idxs (List[int]): list of indexes
+        files (List[Path]): list of input files
+        output_path (Path): output directory
+        basename (str): pattern to name output file
+    """
+
     index = 0
     sentence_number = -1
 
     logger.info("LEN SENTENCES RESERVOIR: %d", len(sentences_idxs))
 
-    with open(output_path / basename / ".txt", "w") as fout_linear, \
-        open(output_path / basename / ".conll", "w") as fout_conll:
+    with open(output_path / f"{basename}.txt", "w") as fout_linear, \
+        open(output_path / f"{basename}.conll", "w") as fout_conll:
 
         for filename in files:
             logger.info("reading file %s...", filename)
@@ -113,6 +143,13 @@ def print_to_file(sentences_idxs, files, output_path, basename):
 
 
 def parse(output_dir: Path, input_dir: Path, model_path: Path) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        input_dir (Path): _description_
+        model_path (Path): _description_
+    """
 
     model = udpipe.Model.load(futils.get_str_path(model_path))
 
@@ -124,7 +161,7 @@ def parse(output_dir: Path, input_dir: Path, model_path: Path) -> None:
     for filename in input_dir.iterdir():
         basename = filename.stem
 
-        logger.info("processing file %s/%s", input_dir, filename)
+        logger.info("processing file %s/%s", input_dir, basename)
 
         with open(filename) as fin, open(output_dir / f"{basename}.conllu", "w") as fout:
             text = ''.join(fin.readlines())

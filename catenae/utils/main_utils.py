@@ -333,10 +333,10 @@ def glassify_matrix(args: argparse.Namespace) -> None:
         args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_filename = futils.check_path(args.input)
+    input_dir = futils.check_path(args.input)
     catenae_path = futils.check_path(args.catenae)
 
-    glassify.compute_matrix(output_dir, input_filename, catenae_path,
+    glassify.compute_matrix(output_dir, input_dir, catenae_path,
                             min_len_catena=1, max_len_catena=5)
 
 

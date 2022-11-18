@@ -205,7 +205,7 @@ and length between 0 and 3 (`-m` and `-M`).
 
 ### Preparing for babbling
 
-#### `sample-input`
+#### `sample-input` -- IT WORKS!
 
 The script samples a `train`, `development` and `test` set from a set of input files.
 
@@ -216,9 +216,10 @@ The script samples a `train`, `development` and `test` set from a set of input f
 
 Here is a working example:
 
-    catenae sample-input -o data/input_sampled/
-                         -c data/input_test/
-                         -s 3000
+    catenae sample-input -o data/output_sampled/
+                         -c data/corpus/
+                         -s 800
+                         --seed 132
 
 The above command will create `train`, `valid` and `test` files in the `data/input_sampled/`
 folder, both in linear version (`.txt` extension) and parsed version (`.conll` extension).
