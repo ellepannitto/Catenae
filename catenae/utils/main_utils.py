@@ -320,7 +320,9 @@ def reduce_simmatrix(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    similarities_values = futils.check_path(args.similarities_values)
+    similarities_values = []
+    for filename in args.similarities_values:
+        similarities_values.append(futils.check_path(filename))
     top_k = args.top_k
 
     dsm.reduce(output_dir, similarities_values, top_k)

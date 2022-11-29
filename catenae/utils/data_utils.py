@@ -157,7 +157,7 @@ class DefaultList(list):
 
         self.fill(index)
 
-        super().append(index, item)
+        super().append(item)
 
     def fill(self, index: int):
         """Fills the list with default value from position len to position index-1

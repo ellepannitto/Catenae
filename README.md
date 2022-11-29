@@ -341,9 +341,27 @@ More specifically:
 
 * If the `--chunked` option is provided, a number of `simmatrix.*.npy` files are produced, each one containing a chunk of the similarity matrix in numpy format.
 
-* If the `--chunked` option is not provided, a `single simmatrix.npy` file is, containing the entire similarity matrix.
+* If the `--chunked` option is not provided, a single `simmatrix.npy` file is, containing the entire similarity matrix.
 
-#### `reduce-matrix`
+#### `reduce-simmatrix` -- IT WORKS!
+
+The script reduces the similarity matrix computed with the command `similarity-matrix` to the first `top-k` values.
+
+    catenae reduce-simmatrix [-o OUTPUT_DIR]
+                             --similarities-values SIMILARITIES_VALUES
+                             -k TOP_K
+
+Here is a working example:
+
+    catenae reduce-simmatrix -o data/reduced_simmatrix/
+                             --similarities-values  data/output_simmatrix/simmatrix.*.npy
+                             -k 10
+
+The above command will create two files in the output folder:
+* `catenae-dsm-red.sim.npy` containing the similarity values in `.npy` format
+* `catenae-dsm-red.idxs.npy`  containing the matrix of indexes in `.npy` format
+
+
 
 #### `query-neighbors`
 

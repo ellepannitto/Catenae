@@ -280,13 +280,13 @@ def compute_simmatrix(output_dir: Path, input_dsm_vec: Path, input_dsm_idx: Path
     logger.info("Matrix saved to %s", str(output_fname))
 
 
-def reduce(output_dir: Path, similarities_values: List[str], top_k: int) -> None:
-    """_summary_
+def reduce(output_dir: Path, similarities_values: List[Path], top_k: int) -> None:
+    """Extract top values from similarity matrix
 
     Args:
-        output_dir (Path): _description_
-        similarities_values (List[str]): _description_
-        top_k (int): _description_
+        output_dir (Path): path to directory for storing output
+        similarities_values (List[Path]): paths to .npy files containing cosine similarities
+        top_k (int): number of values to keep
     """
 
     matrix_topk = None
