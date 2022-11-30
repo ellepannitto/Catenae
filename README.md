@@ -331,7 +331,7 @@ Here is a working example:
                                 --chunked
                                 --working-memory 2000
 
-| IMPORTANT |
+|  IMPORTANT  |
 -----
 The catenae contained in the files used as `reduced-left-matrix` and `reduced-right-matrix` should be subsets of the catenae contained in the file `DSM_IDX`. It is not mandatory that the order in which they appear in the file is the same, nonetheless there cannot be catenae in `reduced-[left\|right]-matrix` file that do not appear in the `DSM_IDX` file.
 
@@ -362,7 +362,6 @@ The above command will create two files in the output folder:
 * `catenae-dsm-red.idxs.npy`  containing the matrix of indexes in `.npy` format
 
 
-
 #### `query-neighbors`
 
 ---
@@ -371,7 +370,29 @@ The above command will create two files in the output folder:
 
 #### `spearmanr`
 
-#### `corecatenae`
+#### `corecatenae` -- IT WORKS!
+
+The script gathers statistics about shared catenae for a group of speakers.
+
+*It's expecting something different!*
+
+    catenae corecatenae [-o OUTPUT_DIR]
+                        -i INPUT_FILES_LIST
+                        -b BABBLING_FILES_LIST
+                        -k TOP_K
+
+Here is a working example:
+
+    catenae corecatenae -o data/output_corecatenae/
+                        -i data/catenae_input/*/catenae-weighted.gz
+                        -b data/catenae_babbling/*/catenae-weighted.gz
+                        -k 300
+
+The above command will generate a file named `babblingstats.tsv` containing the following columns:
+* **catena**: string identifying the catena
+* **input_freq_01** to **input_freq_n**: frequency in input files used as training for speakers 1 to n
+* **babbling_mi_01** to **babbling_mi_n**: mutual information in text produced by speakers 1 to n
+* **babbling_rank_01** to **babbling_rank_n**: rank of catena in weighted list pertaining to speaker 1 to n
 
 #### `extract-sentences`
 

@@ -103,8 +103,8 @@ def correlate(output_dir: Path, filenames_list: List[str], # pylint:disable=too-
                 print(f"{fname1}\t{fname2}\t{stat_value}\t{p_value}", file=fout)
 
 
-def corecatenae(output_dir: Path, input_filenames_list: List[str], # pylint:disable=too-many-locals
-                babbling_filenames_list: List[str], topk: int) -> None:
+def corecatenae(output_dir: Path, input_filenames_list: List[Path], # pylint:disable=too-many-locals
+                babbling_filenames_list: List[Path], topk: int) -> None:
     """_summary_
 
     Args:
@@ -119,7 +119,7 @@ def corecatenae(output_dir: Path, input_filenames_list: List[str], # pylint:disa
     ranks = {}
 
     for fname in babbling_filenames_list:
-        file_idx = int(fname.split("/")[-2]) -1
+        file_idx = int(fname.parts[-2]) - 1
 
         with gzip.open(fname, "rt") as fin:
             fin.readline()
@@ -144,7 +144,7 @@ def corecatenae(output_dir: Path, input_filenames_list: List[str], # pylint:disa
 
 
     for fname in input_filenames_list:
-        file_idx = int(fname.split("/")[-2]) -1
+        file_idx = int(fname.parts[-2]) - 1
 
         with gzip.open(fname, "rt") as fin:
             fin.readline()
@@ -164,13 +164,13 @@ def corecatenae(output_dir: Path, input_filenames_list: List[str], # pylint:disa
     with open(output_dir.joinpath("babblingstats.tsv"), "w") as fout:
         composed_header = "catena\t"
 
-        lst = ["input_freq_"+str(i).zfill(2) for i in range(1,11)]
+        lst = ["input_freq_"+str(i).zfill(2) for i in range(1,len(input_filenames_list)+1)]
         composed_header+= "\t".join(lst)+"\t"
 
-        lst = ["babbling_mi_"+str(i).zfill(2) for i in range(1,11)]
+        lst = ["babbling_mi_"+str(i).zfill(2) for i in range(1,len(input_filenames_list)+1)]
         composed_header+= "\t".join(lst)+"\t"
 
-        lst = ["babbling_rank_"+str(i).zfill(2) for i in range(1,11)]
+        lst = ["babbling_rank_"+str(i).zfill(2) for i in range(1,len(input_filenames_list)+1)]
         composed_header+= "\t".join(lst)
 
         print(composed_header, file=fout)
@@ -189,7 +189,3 @@ def corecatenae(output_dir: Path, input_filenames_list: List[str], # pylint:disa
 
             print("\t".join(lst), file=fout)
 
-            # print("\t".join(str(x) for x in lst))
-            # print(babblings[catena])
-            # print(inputs[catena])
-            # input()

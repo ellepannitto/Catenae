@@ -255,8 +255,14 @@ def corecatenae(args: argparse.Namespace) -> None:
     """
 
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_filenames_list = futils.check_path(args.input_files_list)
-    babbling_filenames_list = futils.check_path(args.babbling_files_list)
+
+    input_filenames_list = []
+    for filename in args.input_files_list:
+        input_filenames_list.append(futils.check_path(filename))
+
+    babbling_filenames_list = []
+    for filename in args.babbling_files_list:
+        babbling_filenames_list.append(futils.check_path(filename))
     topk = args.top_k
 
     analysis.corecatenae(output_dir, input_filenames_list, babbling_filenames_list, topk)
