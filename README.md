@@ -379,7 +379,7 @@ The script gathers statistics about shared catenae for a group of speakers.
     catenae corecatenae [-o OUTPUT_DIR]
                         -i INPUT_FILES_LIST
                         -b BABBLING_FILES_LIST
-                        -k TOP_K
+                        [-k TOP_K]
 
 Here is a working example:
 

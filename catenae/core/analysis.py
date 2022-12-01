@@ -105,13 +105,15 @@ def correlate(output_dir: Path, filenames_list: List[str], # pylint:disable=too-
 
 def corecatenae(output_dir: Path, input_filenames_list: List[Path], # pylint:disable=too-many-locals
                 babbling_filenames_list: List[Path], topk: int) -> None:
-    """_summary_
+    """Extract figures about catenae shared by the population of speakers.
 
     Args:
-        output_dir (str): _description_
-        input_filenames_list (List[str]): _description_
-        babbling_filenames_list (List[str]): _description_
-        topk (int): _description_
+        output_dir (Path): path to output directory
+        input_filenames_list (List[Path]): paths to input files (containing weighted catenae
+                                           extracted from training data), they should be gzipped
+        babbling_filenames_list (List[Path]): paths to input files (containing weighted catenae
+                                              extracted from babbling data), they should be gzipped
+        topk (int): threshold used to consider only top_k lines from babbling data
     """
 
     inputs = {}
