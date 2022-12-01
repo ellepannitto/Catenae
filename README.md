@@ -394,6 +394,8 @@ The above command will generate a file named `babblingstats.tsv` containing the 
 * **babbling_mi_01** to **babbling_mi_n**: mutual information in text produced by speakers 1 to n
 * **babbling_rank_01** to **babbling_rank_n**: rank of catena in weighted list pertaining to speaker 1 to n
 
+The file can be then analyzed through the notebook `core_and_periphery_10speakers.ipynb`, located in the `experiments` folder.
+
 #### `extract-sentences`
 
 #### `glassify-matrix`
