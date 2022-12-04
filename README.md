@@ -415,7 +415,7 @@ More specifically, for each catena (shaped as `a|B|c`) two files are created:
 * **a|B|c.cat** listing all other catenae co-occurring with catena `a|B|c` in the sentences contained in the **a|B|c.sentences** file
 
 
-#### `glassify-matrix`
+#### `glassify-matrix` -- IT WORKS!
 
 Given a list of catenae, the script extracts for each sentence a matrix that represents the sentence given the catenae in the list.
 
@@ -449,12 +449,12 @@ For instance, given the catenae file in the example and the sentence:
 
 we get the output:
 
-|      |       |       |           |        |
-| ---  | ---   | ---   |  ----     | ----   |
-| what | _PRON | _PRON |	@nsubj | @nsubj |
-| 's   | _VERB |  @root	| _VERB	| @root |
-| that | _ | _ | _ | _ |
+|      |       |       |        |        |
+| ---- | ----- | ----- | ------ | ------ |
+| what | _PRON | _PRON | @nsubj | @nsubj |
+| 's   | _VERB | @root | _VERB  | @root  |
+| that | _     | _     | _      | _      |
 
-
+Each column represents a catena with elements placed in the right position in the sentence.
 
 #### `glassify-collapse`
