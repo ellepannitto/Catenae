@@ -1,5 +1,36 @@
 # Catenae
 
+- [Catenae](#catenae)
+  - [How to install](#how-to-install)
+  - [Usage](#usage)
+  - [Options:](#options)
+    - [Statistics on corpus](#statistics-on-corpus)
+      - [`pos-stats`](#pos-stats)
+      - [`morph-stats`](#morph-stats)
+      - [`verbedges-stats`](#verbedges-stats)
+      - [`sbj-stats`](#sbj-stats)
+      - [`synrel-stats`](#synrel-stats)
+    - [From corpus to catenae](#from-corpus-to-catenae)
+      - [`udparse` -- IT WORKS!](#udparse----it-works)
+      - [`extract-catenae` -- IT WORKS!](#extract-catenae----it-works)
+      - [`weight-catenae` -- IT WORKS!](#weight-catenae----it-works)
+      - [`filter-catenae` -- IT WORKS!](#filter-catenae----it-works)
+    - [Preparing for babbling](#preparing-for-babbling)
+      - [`sample-input` -- IT WORKS!](#sample-input----it-works)
+    - [Distributional model](#distributional-model)
+      - [`extract-cooccurrences` -- IT WORKS!](#extract-cooccurrences----it-works)
+      - [`build-dsm` -- IT WORKS!](#build-dsm----it-works)
+      - [`similarity-matrix` -- IT WORKS!](#similarity-matrix----it-works)
+      - [`reduce-simmatrix` -- IT WORKS!](#reduce-simmatrix----it-works)
+      - [`query-neighbors`](#query-neighbors)
+    - [Investigating community of speakers](#investigating-community-of-speakers)
+      - [`spearmanr`](#spearmanr)
+      - [`corecatenae` -- IT WORKS!](#corecatenae----it-works)
+      - [`extract-sentences` -- IT WORKS!](#extract-sentences----it-works)
+      - [`glassify-matrix` -- IT WORKS!](#glassify-matrix----it-works)
+      - [`glassify-collapse`](#glassify-collapse)
+
+
 ## How to install
 
 1. Create a virtual environment dedicated to the project
@@ -332,8 +363,8 @@ Here is a working example:
                                 --working-memory 2000
 
 |  IMPORTANT  |
------
-The catenae contained in the files used as `reduced-left-matrix` and `reduced-right-matrix` should be subsets of the catenae contained in the file `DSM_IDX`. It is not mandatory that the order in which they appear in the file is the same, nonetheless there cannot be catenae in `reduced-[left\|right]-matrix` file that do not appear in the `DSM_IDX` file.
+|    -----    |
+| The catenae contained in the files used as `reduced-left-matrix` and `reduced-right-matrix` should be subsets of the catenae contained in the file `DSM_IDX`. It is not mandatory that the order in which they appear in the file is the same, nonetheless there cannot be catenae in `reduced-[left\|right]-matrix` file that do not appear in the `DSM_IDX` file.|
 
 The above command will create various files in the designated output folder.
 More specifically:
@@ -366,7 +397,7 @@ The above command will create two files in the output folder:
 
 ---
 
-## Investigating community of speakers
+### Investigating community of speakers
 
 #### `spearmanr`
 
