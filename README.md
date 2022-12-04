@@ -374,8 +374,6 @@ The above command will create two files in the output folder:
 
 The script gathers statistics about shared catenae for a group of speakers.
 
-*It's expecting something different!*
-
     catenae corecatenae [-o OUTPUT_DIR]
                         -i INPUT_FILES_LIST
                         -b BABBLING_FILES_LIST
@@ -396,7 +394,26 @@ The above command will generate a file named `babblingstats.tsv` containing the 
 
 The file can be then analyzed through the notebook `core_and_periphery_10speakers.ipynb`, located in the `experiments` folder.
 
-#### `extract-sentences`
+#### `extract-sentences` -- IT WORKS!
+
+The script extracts sentences given a list of catenae.
+
+
+        catenae extract-sentences [-o OUTPUT_DIR]
+                                  -i INPUT_DIR
+                                  -c CATENAE_LIST
+
+Here is a working example:
+
+        catenae extract-sentences -o data/output_sentences/
+                                  -i data/corpus/
+                                  -c data/catenae_list/catenae-01.txt
+
+The above command will generate several files in the output folder.
+More specifically, for each catena (shaped as `a|B|c`) two files are created:
+* **a|B|c.sentences** containing all sentences that present the catena `a|B|c`
+* **a|B|c.cat** listing all other catenae co-occurring with catena `a|B|c` in the sentences contained in the **a|B|c.sentences** file
+
 
 #### `glassify-matrix`
 

@@ -1,3 +1,4 @@
+# pylint: disable=unspecified-encoding
 """Config utilities.
 Methods used to manipulate YAML-based configuration files.
 """

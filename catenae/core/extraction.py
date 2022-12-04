@@ -350,23 +350,25 @@ def filter_catenae(output_dir, input_file, frequency_threshold, weight_threshold
                 print(f"{formatted_catena}\t{freq}\t{weight}", file=fout_words)
 
 
-def extract_sentences(output_dir: Path, input_dir: str, catenae_list: List[str]) -> None:
+def extract_sentences(output_dir: Path, input_dir: Path, catenae_list_fname: Path) -> None:
     """_summary_
 
     Args:
-        output_dir (str): _description_
-        input_file (str): _description_
-        catenae_list (list[str]): _description_
+        output_dir (Path): _description_
+        input_dir (Path): _description_
+        catenae_list_fname (Path): _description_
     """
 
     fout_list_sents = {}
     fout_list_cats = {}
+    catenae_list = set()
 
-    for catena in catenae_list:
-        catena_split = catena.split("|")
-        fout_list_sents[catena] = open(output_dir.joinpath(" ".join(catena_split)+".sentences"), "w") # pylint:disable=line-too-long
-        fout_list_cats[catena] = open(output_dir.joinpath(" ".join(catena_split)+".cat"), "w")
-
+    with open(catenae_list_fname) as f_catenae:
+        for line in f_catenae:
+            catena = line.strip()
+            catenae_list.add(catena)
+            fout_list_sents[catena] = open(output_dir.joinpath(f"{catena}.sentences"), "w")
+            fout_list_cats[catena] = open(output_dir.joinpath(f"{catena}.cat"), "w")
 
     for input_file in tqdm.tqdm(input_dir.iterdir()):
         sentences_it = tqdm.tqdm(enumerate(cutils.plain_conll_reader(input_file.absolute(),

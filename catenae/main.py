@@ -268,15 +268,15 @@ def main() -> None:
 
     # Extract sentences containing specific catenae
     parser_extractsents = subparsers.add_parser("extract-sentences",
-                                                description="extract sentences containing catena",
-                                                help="extract sentences containing catena",
+                                                description="extract sentences containing catenae",
+                                                help="extract sentences containing catenae",
                                                 formatter_class=ArgumentDefaultsHelpFormatter)
     parser_extractsents.add_argument("-o", "--output-dir", default="data/output_sentences/",
                                      help="path to output dir, default is data/output_sentences/")
     parser_extractsents.add_argument("-i", "--input-dir", required=True,
                                      help="directory containing parsed files to be used as input")
-    parser_extractsents.add_argument("-c", "--catenae-list", nargs="+",
-                                     help="list of catenae to look for")
+    parser_extractsents.add_argument("-c", "--catenae-list",
+                                     help="filepath to list of catenae to look for")
     parser_extractsents.set_defaults(func=mutils.extract_sentences)
 
     # Compute similarity matrix for given DSM
