@@ -163,13 +163,13 @@ The script will produce a file named `catenae-weighted.gz` in the output
 folder.
 The file has three tab-separated columns, formatted as follows:
 
-| CATENA | FREQ | W |
-| ----- | ---- | --- |
-| _VERB @case @obl | 978.0 | 1617.3239266779776 |
-|_VERB _ADP @obl |   1005.0|  1415.5696170807614 |
-|@case @obl      |   1047.0 | 1247.283448889141 |
-|_ADP @obl       |   1041.0 | 935.3736059263747 |
-| ... | ... | ... |
+| CATENA           | FREQ   | W                  |
+| ---------------- | ------ | ------------------ |
+| _VERB @case @obl | 978.0  | 1617.3239266779776 |
+| _VERB _ADP @obl  | 1005.0 | 1415.5696170807614 |
+| @case @obl       | 1047.0 | 1247.283448889141  |
+| _ADP @obl        | 1041.0 | 935.3736059263747  |
+| ...              | ...    | ...                |
 
 #### `filter-catenae` -- IT WORKS!
 
@@ -416,5 +416,45 @@ More specifically, for each catena (shaped as `a|B|c`) two files are created:
 
 
 #### `glassify-matrix`
+
+Given a list of catenae, the script extracts for each sentence a matrix that represents the sentence given the catenae in the list.
+
+        catenae glassify-matrix [-o OUTPUT_DIR]
+                                -i INPUT_DIR
+                                -c CATENAE
+                                [--min-len-catena MIN_LEN_CATENA]
+                                [--max-len-catena MAX_LEN_CATENA]
+                                [--multiprocess]
+                                [--n-workers N_WORKERS]
+
+Here is a working example:
+
+        catenae glassify-matrix -o data/output_glassmatrix/
+                                -i data/corpus/
+                                -c data/catenae_list/catenae-01.txt
+                                -min-len-catena 1
+                                --max-len-catena 5
+
+(Note: `multiprocess` has not been yet implemented)
+
+The script will produce one output file in the output directory for each input file provided.
+The files contain all the sentences from the input, with elements from catenae from the list placed in the right positions.
+For instance, given the catenae file in the example and the sentence:
+
+        # speaker: MOT
+        # text: what 's that
+        1	what	what	PRON	WP	PronType=Int	2	nsubj	_	_
+        2	's	be	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+        3	that	that	PRON	DT	Number=Sing|PronType=Dem	2	nsubj	_	_
+
+we get the output:
+
+|      |       |       |           |        |
+| ---  | ---   | ---   |  ----     | ----   |
+| what | _PRON | _PRON |	@nsubj | @nsubj |
+| 's   | _VERB |  @root	| _VERB	| @root |
+| that | _ | _ | _ | _ |
+
+
 
 #### `glassify-collapse`

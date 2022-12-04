@@ -335,10 +335,18 @@ def main() -> None:
                                                formatter_class=ArgumentDefaultsHelpFormatter)
     parser_glassmatrix.add_argument("-o", "--output-dir", default="data/output_glass/",
                                     help="path to output dir, default is data/output_glass/")
-    parser_glassmatrix.add_argument("-i", "--input", required=True,
+    parser_glassmatrix.add_argument("-i", "--input-dir", required=True,
                                     help="path to input directory containin files in CoNLL format")
     parser_glassmatrix.add_argument("-c", "--catenae", required=True,
                                     help="path to file containing catenae")
+    parser_glassmatrix.add_argument("--min-len-catena", type=int, default=0,
+                                    help="minimium length for each catena to be kept")
+    parser_glassmatrix.add_argument("--max-len-catena", type=int, default=5,
+                                    help="maximum length for each catena to be kept. \
+                                    WARNING: highly impacts ram usage")
+    parser_glassmatrix.add_argument("--multiprocess", action="store_true")
+    parser_glassmatrix.add_argument("--n-workers", type=int, default=4,
+                                    help="number of processes")
     parser_glassmatrix.set_defaults(func=mutils.glassify_matrix)
 
 

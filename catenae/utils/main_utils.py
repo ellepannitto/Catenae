@@ -277,7 +277,7 @@ def extract_sentences(args: argparse.Namespace) -> None:
 
     output_dir = futils.check_or_create_dir(args.output_dir)
     input_dir = futils.check_path(args.input_dir)
-    catenae_list = args.catenae_list
+    catenae_list = futils.check_path(args.catenae_list)
 
     extraction.extract_sentences(output_dir, input_dir, catenae_list)
 
@@ -341,11 +341,16 @@ def glassify_matrix(args: argparse.Namespace) -> None:
         args (argparse.Namespace): Object for storing attributes provided as parameters.
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
-    input_dir = futils.check_path(args.input)
+    input_dir = futils.check_path(args.input_dir)
     catenae_path = futils.check_path(args.catenae)
+    min_len_catena = args.min_len_catena
+    max_len_catena = args.max_len_catena
+    multiprocess = args.multiprocess
+    n_workers = args.n_workers
 
     glassify.compute_matrix(output_dir, input_dir, catenae_path,
-                            min_len_catena=1, max_len_catena=5)
+                            min_len_catena, max_len_catena,
+                            multiprocess, n_workers)
 
 
 def glassify_collapse(args: argparse.Namespace) -> None:
@@ -361,3 +366,6 @@ def glassify_collapse(args: argparse.Namespace) -> None:
     chunksize = args.chunksize
 
     glassify.collapse_matrix(output_dir, input_dir, multiprocess, n_workers, chunksize)
+
+
+#TODO: fix docstrings

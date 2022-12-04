@@ -1,5 +1,5 @@
+# pylint: disable=unspecified-encoding
 import logging
-import glob
 import itertools
 import math
 import os
@@ -7,6 +7,8 @@ import functools
 
 from pathlib import Path
 from multiprocessing import Pool
+
+from typing import Iterable, Tuple
 
 import tqdm
 from tqdm.contrib.concurrent import process_map
@@ -20,25 +22,34 @@ from catenae.utils import catenae_utils as catutils
 logger = logging.getLogger(__name__)
 
 
-def compute_matrix(output_dir: Path, input_dir: str, catenae_fpath: str,
+def compute_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
                    min_len_catena: int, max_len_catena: int,
-                   multiprocess: bool = False) -> None:
+                   multiprocess: bool, n_workers: int) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        input_dir (Path): _description_
+        catenae_fpath (Path): _description_
+        min_len_catena (int): _description_
+        max_len_catena (int): _description_
+        multiprocess (bool): _description_
+        n_workers (int): _description_
+    """
 
     # TODO implement multiprocess
 
     catenae_glass = dutils.load_catenae_set(catenae_fpath, math.inf)
 
-    input_files = glob.glob(input_dir+"/*")
-    input_files_it = tqdm.tqdm(input_files)
+    input_files_it = tqdm.tqdm(input_dir.iterdir())
 
     for input_file in input_files_it:
-        with open(output_dir.joinpath(os.path.basename(input_file)), "w") as fout:
 
+        with open(output_dir.joinpath(input_file.name), "w") as fout:
             input_files_it.set_description(f"Reading file {input_file}")
 
-            for _, sentence in enumerate(cutils.plain_conll_reader(input_file,
+            for _, sentence in enumerate(cutils.plain_conll_reader(input_file.absolute(),
                                                                    min_len=1, max_len=25)):
-
                 if sentence:
                     children = {}
                     tokens = {}
@@ -46,7 +57,8 @@ def compute_matrix(output_dir: Path, input_dir: str, catenae_fpath: str,
                     rels = {}
                     tokens_to_remove = []
 
-                    projected_sentence = [dutils.DefaultList([el.split("\t")[1]], "_") for el in sentence]
+                    projected_sentence = [dutils.DefaultList([el.split("\t")[1]], "_")
+                                          for el in sentence]
                     currently_looking_at = 1
 
                     for token in sentence:
@@ -71,7 +83,9 @@ def compute_matrix(output_dir: Path, input_dir: str, catenae_fpath: str,
 
                     if 0 in children:
                         root = children[0][0]
-                        _, catenae = catutils.recursive_catenae_extraction(root, children, min_len_catena, max_len_catena)
+                        _, catenae = catutils.recursive_catenae_extraction(root, children,
+                                                                           min_len_catena,
+                                                                           max_len_catena)
 
                         explicit_catenae = set()
 
@@ -108,9 +122,9 @@ def compute_matrix(output_dir: Path, input_dir: str, catenae_fpath: str,
                         print("\n", file=fout)
 
 
-def matchable(cxn1, cxn2):
+def matchable(cxn1: Iterable[str], cxn2: Iterable[str]) -> bool:
     # print("matching", sentence, "with", candidate_cxn)
-    matchable = True
+    is_matchable = True
 
     for el1, el2 in zip(cxn1, cxn2):
 
@@ -119,18 +133,18 @@ def matchable(cxn1, cxn2):
         elif el1 == "_" or el2 == "_":
             pass
         else:
-            matchable = False
+            is_matchable = False
 
         # if not (sent_el == "_" or sent_el == cxn_el):
-        #     matchable = False
+        #     is_matchable = False
 
         # if not cxn_el == "_" and not sent_el == "_":
-        #     matchable = False
+        #     is_matchable = False
 
-    return matchable
+    return is_matchable
 
 
-def update(sentence, cxn):
+def update(sentence: Iterable[str], cxn: Iterable[str]) -> Tuple[Iterable[str], int]:
     ret = [x for x in sentence]
     added = 0
     for i, cxn_el in enumerate(cxn):
@@ -141,38 +155,43 @@ def update(sentence, cxn):
     return ret, added
 
 
-def process(mat):
+def process(search_space):
 
-    rev_mat = [[x[i] for x in mat] for i in range(len(mat[0]))]
     solutions = []
 
-    if len(rev_mat) > 1:
-        search_space = rev_mat[1:]
+    G = nx.Graph()
+    for i, cxn in enumerate(search_space):
+        G.add_node(i)
 
-        G = nx.Graph()
-        for i, cxn in enumerate(search_space):
-            G.add_node(i)
+    for i, cxn1 in enumerate(search_space):
+        for j, cxn2 in enumerate(search_space):
+            if matchable(cxn1, cxn2):
+                G.add_edge(i, j)
 
-        for i, cxn1 in enumerate(search_space):
-            for j, cxn2 in enumerate(search_space):
-                if matchable(cxn1, cxn2):
-                    G.add_edge(i, j)
+    for element in nx.find_cliques(G):
+        projected_sentence = ["_"]*len(search_space[0])
 
-        for element in nx.find_cliques(G):
-            projected_sentence = ["_"]*len(rev_mat[0])
-            built_from = []
+        for idx in element:
+            projected_sentence, _ = update(projected_sentence, search_space[idx])
 
-            for idx in element:
-                projected_sentence, _ = update(projected_sentence, search_space[idx])
-                built_from.append(search_space[idx])
+        solutions.append((element, tuple(projected_sentence)))
 
-            solutions.append((built_from, tuple(projected_sentence)))
+    return solutions
 
-    return rev_mat[0], solutions
+
+def add_lexical_items(sentence: Iterable[str], collapsed_sentence: Iterable[str]) -> Iterable[str]:
+    ret = [x for x in collapsed_sentence]
+
+    for i, lem in enumerate(sentence):
+        if ret[i] == "_":
+            ret[i] = f"+{lem}"
+
+    return ret
 
 
 def lenscore(x):
     return len([y for y in x if not y == "_"])
+
 
 def abscore(x):
     new_x = [y for y in x if not y == "_"]
@@ -187,14 +206,15 @@ def abscore(x):
     return (3*n_words + 2*n_pos + n_rels) / len(new_x)
 
 
-def collapse_matrix(output_dir: Path, input_dir: str, multiprocessing: bool) -> None:
+def collapse_matrix(output_dir: Path, input_dir: str, multiprocessing: bool,
+                    n_workers: int, chunksize: int) -> None:
 
     filenames = os.listdir(input_dir)
 
     if multiprocessing:
-        process_map(functools.partial(basic_collapse, output_dir=output_dir, input_dir=input_dir),
+        process_map(functools.partial(collapse, output_dir=output_dir, input_dir=input_dir),
                     filenames,
-                    max_workers=10, chunksize=200)
+                    max_workers=n_workers, chunksize=chunksize)
         # with Pool(10) as p:
         #     ret = list(tqdm.tqdm(p.imap(functools.partial(basic_collapse, output_dir=output_dir, input_dir=input_dir),
         #                          filenames)))
@@ -204,33 +224,57 @@ def collapse_matrix(output_dir: Path, input_dir: str, multiprocessing: bool) -> 
         lstdir_it = tqdm.tqdm(filenames)
         for filename in lstdir_it:
             lstdir_it.set_description(f"Processing {filename}")
-            basic_collapse(filename, output_dir, input_dir)
+            collapse(filename, output_dir, input_dir)
 
 
-def basic_collapse(filename: str, output_dir: Path, input_dir: str):
+def collapse(filename: str, output_dir: Path, input_dir: str):
 
     with open(input_dir.joinpath(filename)) as fin, \
-        open(output_dir.joinpath(filename), "w") as fout:
+        open(output_dir.joinpath(filename), "w") as fout_translation, \
+            open(output_dir.joinpath(f"{filename}.cxns"), "w") as fout_cxns:
+
+        fin_lines = fin.readlines()
         mat = []
-        for line in fin:
+        # lines_it = tqdm.tqdm(fin_lines)
+        # lines_it.set_description(filename)
+        for line in tqdm.tqdm(fin_lines):
             line = line.strip()
 
             if line:
                 mat.append(line.split("\t"))
             else:
+
                 if mat:
-                    original_sentence, solutions = process(mat)
-                    unique_solutions = set([y for x, y in solutions])
-                    scored_solutions = [(x, y, abscore(y), lenscore(y)) for x, y in solutions]
-                    sorted_solutions = sorted(scored_solutions, key=lambda x: (x[2], x[3]), reverse=True)
+                    rev_mat = [[x[i] for x in mat] for i in range(len(mat[0]))]
 
-                    print("SENTENCE:", " ".join(original_sentence), file=fout)
-                    print("UNIQUE TRANSLATIONS:", len(unique_solutions), "/", len(solutions), file=fout)
-                    print("TRANSLATIONS:", file=fout)
-                    for built_from, solution, abscore_v, lenscore_v in sorted_solutions:
-                        built_from_str = [" ".join(x) for x in built_from]
-                        print("\t", "{:.2f}".format(abscore_v), "\t", lenscore_v,
-                              "\t", " ".join(solution),
-                              "\t", "\t".join(built_from_str), file=fout)
+                    if len(rev_mat) > 1 and len(rev_mat) < 200: #TODO: check here
+                        full_sentence, search_space = rev_mat[0], rev_mat[1:]
+                        solutions = process(search_space)
 
+                        scored_solutions = [(x, y, abscore(y), lenscore(y)) for x, y in solutions]
+                        sorted_solutions = sorted(scored_solutions, key=lambda x: (x[2], x[3]), reverse=True)
+
+                        print("SENTENCE:", " ".join(rev_mat[0]), file=fout_translation)
+                        print("SENTENCE:", " ".join(rev_mat[0]), file=fout_cxns)
+                        # print("SENTENCE:", " ".join(rev_mat[0]))
+                        # print("SENTENCE:", " ".join(rev_mat[0]))
+
+                        for i, construction in enumerate(rev_mat[1:]):
+                            print(i, "\t", " ".join(construction), file=fout_cxns)
+                            # print(i, "\t", " ".join(construction))
+
+                        print("TRANSLATIONS:", file=fout_translation)
+                        for built_from, solution, abscore_v, lenscore_v in sorted_solutions:
+                            built_from_str = " ".join(str(x) for x in built_from)
+
+                            solution = add_lexical_items(full_sentence, list(solution))
+                            print("\t", f"{abscore_v:.2f}", "\t", lenscore_v,
+                                "\t\t", " ".join(solution),
+                                "\t", built_from_str, file=fout_translation)
+                            # print("\t", f"{abscore_v:.2f}", "\t", lenscore_v,
+                                # "\t\t", " ".join(solution),
+                                # "\t", built_from_str)
                 mat = []
+
+
+# TODO: switch to tqdm multiprocess
