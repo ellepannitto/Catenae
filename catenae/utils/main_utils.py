@@ -361,11 +361,13 @@ def glassify_collapse(args: argparse.Namespace) -> None:
     """
     output_dir = futils.check_or_create_dir(args.output_dir)
     input_dir = futils.check_path(args.input_dir)
+    catenae_fpath = futils.check_path(args.catenae)
     multiprocess = args.multiprocess
     n_workers = args.n_workers
     chunksize = args.chunksize
 
-    glassify.collapse_matrix(output_dir, input_dir, multiprocess, n_workers, chunksize)
+    glassify.collapse_matrix(output_dir, input_dir, catenae_fpath,
+                             multiprocess, n_workers, chunksize)
 
 
 #TODO: fix docstrings

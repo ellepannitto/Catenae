@@ -4,8 +4,6 @@
 Entry point for package "catenae"
 """
 
-# TODO add function to check input dirs and input filepaths
-
 import argparse
 from argparse import RawTextHelpFormatter, ArgumentDefaultsHelpFormatter
 import logging.config
@@ -359,6 +357,8 @@ def main() -> None:
                                       help="path to output dir, default is data/output_glasscollapse/") # pylint:disable=line-too-long
     parser_glasscollapse.add_argument("-i", "--input-dir", required=True,
                                       help="path to input folder containing matrices")
+    parser_glasscollapse.add_argument("-c", "--catenae", required=True,
+                                      help="path to file containing catenae")
     parser_glasscollapse.add_argument("--multiprocess", action="store_true")
     parser_glasscollapse.add_argument("--n-workers", type=int, default=4,
                                       help="number of processes")

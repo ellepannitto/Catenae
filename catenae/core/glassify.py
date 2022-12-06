@@ -2,13 +2,13 @@
 import logging
 import itertools
 import math
-import os
 import functools
+import collections
 
 from pathlib import Path
 from multiprocessing import Pool
 
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, List, Dict
 
 import tqdm
 from tqdm.contrib.concurrent import process_map
@@ -123,25 +123,24 @@ def compute_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
 
 
 def matchable(cxn1: Iterable[str], cxn2: Iterable[str]) -> bool:
-    # print("matching", sentence, "with", candidate_cxn)
-    is_matchable = True
+    """_summary_
 
-    for el1, el2 in zip(cxn1, cxn2):
+    Args:
+        cxn1 (Iterable[str]): _description_
+        cxn2 (Iterable[str]): _description_
 
-        if el1 == el2:
-            pass
-        elif el1 == "_" or el2 == "_":
-            pass
-        else:
-            is_matchable = False
+    Returns:
+        bool: _description_
+    """
 
-        # if not (sent_el == "_" or sent_el == cxn_el):
-        #     is_matchable = False
+    cxn1_values = set(i for i, el in enumerate(cxn1) if not el == "_")
+    cxn2_values = set(i for i, el in enumerate(cxn2) if not el == "_")
 
-        # if not cxn_el == "_" and not sent_el == "_":
-        #     is_matchable = False
+    intersection = cxn1_values & cxn2_values
+    sim_dif = cxn1_values ^ cxn2_values
 
-    return is_matchable
+    return all(cxn1[i]==cxn2[i] for i in intersection) and \
+        not (cxn1_values < cxn2_values or cxn2_values < cxn1_values)
 
 
 def update(sentence: Iterable[str], cxn: Iterable[str]) -> Tuple[Iterable[str], int]:
@@ -155,26 +154,40 @@ def update(sentence: Iterable[str], cxn: Iterable[str]) -> Tuple[Iterable[str], 
     return ret, added
 
 
-def process(search_space):
+def process(search_space, len_sentence):
 
-    solutions = []
+    solutions = collections.defaultdict(list)
 
     G = nx.Graph()
-    for i, cxn in enumerate(search_space):
+    for i, _ in search_space.items():
         G.add_node(i)
 
-    for i, cxn1 in enumerate(search_space):
-        for j, cxn2 in enumerate(search_space):
-            if matchable(cxn1, cxn2):
-                G.add_edge(i, j)
+    for i, cxn1 in search_space.items():
+        for j, cxn2 in search_space.items():
+            if j>i:
+                # print("\t\t".join(cxn1))
+                # print("\t\t".join(cxn2))
+                # print(matchable(cxn1, cxn2))
+                if matchable(cxn1, cxn2):
+                    G.add_edge(i, j)
+                # input()
+
+    # G = nx.Graph()
+    # for i, cxn in enumerate(search_space):
+    #     G.add_node(i)
+
+    # for i, cxn1 in enumerate(search_space):
+    #     for j, cxn2 in enumerate(search_space):
+    #         if matchable(cxn1, cxn2):
+    #             G.add_edge(i, j)
 
     for element in nx.find_cliques(G):
-        projected_sentence = ["_"]*len(search_space[0])
+        projected_sentence = ["_"]*len_sentence
 
         for idx in element:
             projected_sentence, _ = update(projected_sentence, search_space[idx])
 
-        solutions.append((element, tuple(projected_sentence)))
+        solutions[tuple(projected_sentence)].append(element)
 
     return solutions
 
@@ -206,28 +219,88 @@ def abscore(x):
     return (3*n_words + 2*n_pos + n_rels) / len(new_x)
 
 
-def collapse_matrix(output_dir: Path, input_dir: str, multiprocessing: bool,
-                    n_workers: int, chunksize: int) -> None:
+def collapse_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
+                    multiprocessing: bool, n_workers: int, chunksize: int) -> None:
+    """_summary_
 
-    filenames = os.listdir(input_dir)
+    Args:
+        output_dir (Path): _description_
+        input_dir (Path): _description_
+        catenae_fpath (Path): _description_
+        multiprocessing (bool): _description_
+        n_workers (int): _description_
+        chunksize (int): _description_
+    """
+
+    catenae_idx = {cxn:i for i, cxn in enumerate(dutils.load_catenae_set(catenae_fpath, math.inf))}
+    with open(output_dir.joinpath("catenae.idx"), "w") as fout_catenae:
+        for cxn, idx in catenae_idx.items():
+            print(f"{idx}\t{cxn}", file=fout_catenae)
+
+    filenames = input_dir.iterdir()
 
     if multiprocessing:
-        process_map(functools.partial(collapse, output_dir=output_dir, input_dir=input_dir),
-                    filenames,
-                    max_workers=n_workers, chunksize=chunksize)
+        process_map(functools.partial(collapse, output_dir=output_dir,
+                                      input_dir=input_dir, catenae_idx=catenae_idx),
+                    filenames, max_workers=n_workers, chunksize=chunksize)
+
         # with Pool(10) as p:
         #     ret = list(tqdm.tqdm(p.imap(functools.partial(basic_collapse, output_dir=output_dir, input_dir=input_dir),
         #                          filenames)))
 
     else:
-
         lstdir_it = tqdm.tqdm(filenames)
         for filename in lstdir_it:
+            filename = filename.name
             lstdir_it.set_description(f"Processing {filename}")
-            collapse(filename, output_dir, input_dir)
+            collapse(filename, output_dir, input_dir, catenae_idx)
 
 
-def collapse(filename: str, output_dir: Path, input_dir: str):
+def not_underscore(lst: List[str]) -> int:
+    """_summary_
+
+    Args:
+        lst (List[str]): _description_
+
+    Returns:
+        int: _description_
+    """
+    n = 0
+    for el in lst:
+        if not el == "_":
+            n+=1
+    return n
+
+
+def strip_underscore(cxn: List[str]) -> str:
+    """_summary_
+
+    Args:
+        cxn (List[str]): _description_
+
+    Returns:
+        str: _description_
+    """
+
+    # print(cxn)
+
+    new_cxn = [x for x in cxn if not x == "_"]
+    # print("|".join(new_cxn))
+    return "|".join(new_cxn)
+
+
+def collapse(filename: Path, output_dir: Path, input_dir: Path,
+             catenae_idx: Dict[int, str]) -> None:
+    """_summary_
+
+    Args:
+        filename (Path): _description_
+        output_dir (Path): _description_
+        input_dir (Path): _description_
+        catenae_fpath (Path): _description_
+    """
+
+
 
     with open(input_dir.joinpath(filename)) as fin, \
         open(output_dir.joinpath(filename), "w") as fout_translation, \
@@ -243,34 +316,80 @@ def collapse(filename: str, output_dir: Path, input_dir: str):
             if line:
                 mat.append(line.split("\t"))
             else:
-
                 if mat:
+                    # print("\n".join("\t".join(el) for el in mat))
                     rev_mat = [[x[i] for x in mat] for i in range(len(mat[0]))]
+#                    if len(rev_mat) > 1 and len(rev_mat) < 200: #TODO: check here
 
-                    if len(rev_mat) > 1 and len(rev_mat) < 200: #TODO: check here
+                    if len(rev_mat) > 1:
                         full_sentence, search_space = rev_mat[0], rev_mat[1:]
-                        solutions = process(search_space)
+                        len_sentence = len(full_sentence)
+                        # search_space = [(not_underscore(el), el) for el in search_space]
 
-                        scored_solutions = [(x, y, abscore(y), lenscore(y)) for x, y in solutions]
-                        sorted_solutions = sorted(scored_solutions, key=lambda x: (x[2], x[3]), reverse=True)
+                        # search_space.sort(key=operator.itemgetter(0))
 
-                        print("SENTENCE:", " ".join(rev_mat[0]), file=fout_translation)
-                        print("SENTENCE:", " ".join(rev_mat[0]), file=fout_cxns)
+                        # groups = itertools.groupby(search_space, key=operator.itemgetter(0))
+
+                        # search_space = [[item for item in data] for (key, data) in groups]
+
+                        search_space_dict = collections.defaultdict(list)
+                        for cxn in search_space:
+                            search_space_dict[catenae_idx[strip_underscore(cxn)]].append(cxn)
+                        # search_space = {catenae_idx[strip_underscore(cxn)]: cxn
+                        #                 for cxn in search_space}
+
+                        search_space_uniquedict = {}
+                        for i, el_lst in search_space_dict.items():
+                            if len(el_lst) == 1:
+                                search_space_uniquedict[str(i)] = el_lst[0]
+                            else:
+                                idx = 1
+                                for el in el_lst:
+                                    search_space_uniquedict[f"{str(i)}_{idx}"] = el
+                                    idx += 1
+
+
+                        # for el in search_space_uniquedict:
+                        #     print(el, search_space_uniquedict[el])
+                        # input()
+
+                        solutions = process(search_space_uniquedict, len_sentence)
+
+
+
+                        # print(solutions)
+
+                        # scored_solutions = [(x, y, abscore(y), lenscore(y)) for x, y in solutions]
+                        # sorted_solutions = sorted(scored_solutions, key=lambda x: (x[2], x[3]), reverse=True)
+
+                        print("SENTENCE:", " ".join(full_sentence), file=fout_translation)
+                        print("SENTENCE:", " ".join(full_sentence), file=fout_cxns)
                         # print("SENTENCE:", " ".join(rev_mat[0]))
                         # print("SENTENCE:", " ".join(rev_mat[0]))
 
-                        for i, construction in enumerate(rev_mat[1:]):
-                            print(i, "\t", " ".join(construction), file=fout_cxns)
-                            # print(i, "\t", " ".join(construction))
+                        print("\t".join(search_space_uniquedict.keys()), file=fout_cxns)
 
-                        print("TRANSLATIONS:", file=fout_translation)
-                        for built_from, solution, abscore_v, lenscore_v in sorted_solutions:
-                            built_from_str = " ".join(str(x) for x in built_from)
-
+                        for solution, built_from_lst in solutions.items():
                             solution = add_lexical_items(full_sentence, list(solution))
-                            print("\t", f"{abscore_v:.2f}", "\t", lenscore_v,
-                                "\t\t", " ".join(solution),
-                                "\t", built_from_str, file=fout_translation)
+                            to_print = " ".join(solution)
+
+                            for built_from in built_from_lst:
+                                built_from_str = " ".join(built_from)
+                                to_print += f"\t{built_from_str}"
+
+                            print(to_print, file=fout_translation)
+                            # print(" ".join(solution),
+                            #       "\t", built_from_str, file=fout_translation)
+                        print("\n", file=fout_cxns)
+                        print("\n", file=fout_translation)
+
+                        # for built_from, solution, abscore_v, lenscore_v in sorted_solutions:
+                        #     built_from_str = " ".join(str(x) for x in built_from)
+
+                        #     solution = add_lexical_items(full_sentence, list(solution))
+                        #     print("\t", f"{abscore_v:.2f}", "\t", lenscore_v,
+                        #         "\t\t", " ".join(solution),
+                        #         "\t", built_from_str, file=fout_translation)
                             # print("\t", f"{abscore_v:.2f}", "\t", lenscore_v,
                                 # "\t\t", " ".join(solution),
                                 # "\t", built_from_str)
