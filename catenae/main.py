@@ -347,6 +347,22 @@ def main() -> None:
                                     help="number of processes")
     parser_glassmatrix.set_defaults(func=mutils.glassify_matrix)
 
+    #Create input for PMC
+    parser_sentencematrix = subparsers.add_parser("sentence-matrix",
+                                                  description="create matrix for each sentence",
+                                                  help="create matrix for each sentence",
+                                                  formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_sentencematrix.add_argument("-o", "--output-dir", default="data/output_sentencematrix/",
+                                       help="path to output dir, default is data/output_sentencematrix/")
+    parser_sentencematrix.add_argument("-i", "--input-dir", required=True,
+                                       help="path to input folder containing matrices")
+    parser_sentencematrix.add_argument("-c", "--catenae", required=True,
+                                       help="path to file containing catenae")
+    parser_sentencematrix.add_argument("--multiprocessing", action="store_true",
+                                       help="set to true for multiprocessing version")
+    parser_sentencematrix.add_argument("--n-workers", type=int, default=4,
+                                       help="number of processes")
+    parser_sentencematrix.set_defaults(func=mutils.sentence_matrix)
 
     # Collapses matrix to project list of catenae on data
     parser_glasscollapse = subparsers.add_parser("glassify-collapse",

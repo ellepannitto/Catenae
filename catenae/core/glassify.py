@@ -4,6 +4,7 @@ import itertools
 import math
 import functools
 import collections
+import time
 
 from pathlib import Path
 from multiprocessing import Pool
@@ -13,10 +14,12 @@ from typing import Iterable, Tuple, List, Dict
 import tqdm
 from tqdm.contrib.concurrent import process_map
 import networkx as nx
+import networkit as nit
 
 from catenae.utils import corpus_utils as cutils
 from catenae.utils import data_utils as dutils
 from catenae.utils import catenae_utils as catutils
+from catenae.utils import glassify_utils as gutils
 
 
 logger = logging.getLogger(__name__)
@@ -122,39 +125,7 @@ def compute_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
                         print("\n", file=fout)
 
 
-def matchable(cxn1: Iterable[str], cxn2: Iterable[str]) -> bool:
-    """_summary_
-
-    Args:
-        cxn1 (Iterable[str]): _description_
-        cxn2 (Iterable[str]): _description_
-
-    Returns:
-        bool: _description_
-    """
-
-    cxn1_values = set(i for i, el in enumerate(cxn1) if not el == "_")
-    cxn2_values = set(i for i, el in enumerate(cxn2) if not el == "_")
-
-    intersection = cxn1_values & cxn2_values
-    sim_dif = cxn1_values ^ cxn2_values
-
-    return all(cxn1[i]==cxn2[i] for i in intersection) and \
-        not (cxn1_values < cxn2_values or cxn2_values < cxn1_values)
-
-
-def update(sentence: Iterable[str], cxn: Iterable[str]) -> Tuple[Iterable[str], int]:
-    ret = [x for x in sentence]
-    added = 0
-    for i, cxn_el in enumerate(cxn):
-        if not cxn_el == "_":
-            ret[i] = cxn_el
-            added += 1
-
-    return ret, added
-
-
-def process(search_space, len_sentence):
+def process_old(search_space, len_sentence): #NETWORKX
 
     solutions = collections.defaultdict(list)
 
@@ -162,61 +133,61 @@ def process(search_space, len_sentence):
     for i, _ in search_space.items():
         G.add_node(i)
 
+    number_of_connections = 0
     for i, cxn1 in search_space.items():
         for j, cxn2 in search_space.items():
             if j>i:
-                # print("\t\t".join(cxn1))
-                # print("\t\t".join(cxn2))
-                # print(matchable(cxn1, cxn2))
-                if matchable(cxn1, cxn2):
+                if gutils.matchable(cxn1, cxn2):
+                    number_of_connections += 1
                     G.add_edge(i, j)
-                # input()
-
-    # G = nx.Graph()
-    # for i, cxn in enumerate(search_space):
-    #     G.add_node(i)
-
-    # for i, cxn1 in enumerate(search_space):
-    #     for j, cxn2 in enumerate(search_space):
-    #         if matchable(cxn1, cxn2):
-    #             G.add_edge(i, j)
 
     for element in nx.find_cliques(G):
         projected_sentence = ["_"]*len_sentence
 
         for idx in element:
-            projected_sentence, _ = update(projected_sentence, search_space[idx])
+            projected_sentence, _ = gutils.update(projected_sentence, search_space[idx])
 
         solutions[tuple(projected_sentence)].append(element)
 
     return solutions
 
+def process(search_space, len_sentence):
 
-def add_lexical_items(sentence: Iterable[str], collapsed_sentence: Iterable[str]) -> Iterable[str]:
-    ret = [x for x in collapsed_sentence]
+    # print(len(search_space))
 
-    for i, lem in enumerate(sentence):
-        if ret[i] == "_":
-            ret[i] = f"+{lem}"
+    solutions = collections.defaultdict(list)
+    nodes_map = {}
+    reverse_nodes_map = {}
 
-    return ret
+    G = nit.graph.Graph()
+    for i, _ in search_space.items():
+        new_node = G.addNode()
+        nodes_map[i] = new_node
+        reverse_nodes_map[new_node] = i
 
 
-def lenscore(x):
-    return len([y for y in x if not y == "_"])
+    number_of_connections = 0
+    for i, cxn1 in search_space.items():
+        for j, cxn2 in search_space.items():
+            if j>i:
+                if gutils.matchable(cxn1, cxn2):
+                    number_of_connections += 1
+                    G.addEdge(nodes_map[i], nodes_map[j])
 
+    cliques = nit.clique.MaximalCliques(G).run()
 
-def abscore(x):
-    new_x = [y for y in x if not y == "_"]
+    for element in cliques.getCliques():
 
-    rels = [z for z in new_x if z[0]=="@"]
-    pos = [z for z in new_x if z[0]=="_"]
+        element = [reverse_nodes_map[i] for i in element]
 
-    n_rels = len(rels)
-    n_pos = len(pos)
-    n_words = len(new_x) - len(rels) - len(pos)
+        projected_sentence = ["_"]*len_sentence
 
-    return (3*n_words + 2*n_pos + n_rels) / len(new_x)
+        for idx in element:
+            projected_sentence, _ = gutils.update(projected_sentence, search_space[idx])
+
+        solutions[tuple(projected_sentence)].append(element)
+
+    return solutions
 
 
 def collapse_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
@@ -250,47 +221,125 @@ def collapse_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
 
     else:
         lstdir_it = tqdm.tqdm(filenames)
-        for filename in lstdir_it:
-            filename = filename.name
-            lstdir_it.set_description(f"Processing {filename}")
-            collapse(filename, output_dir, input_dir, catenae_idx)
+        with open(output_dir.joinpath("computing_times.txt"), "w") as fout_times:
+            for filename in lstdir_it:
+                filename = filename.name
+                lstdir_it.set_description(f"Processing {filename}")
+                start = time.time()
+                collapse(filename, output_dir, input_dir, catenae_idx)
+                end = time.time()
+                print(f"{end-start}\t{filename}", file=fout_times)
 
 
-def not_underscore(lst: List[str]) -> int:
-    """_summary_
 
-    Args:
-        lst (List[str]): _description_
+def sentence_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
+                    multiprocessing: bool, n_workers: int) -> None:
 
-    Returns:
-        int: _description_
-    """
-    n = 0
-    for el in lst:
-        if not el == "_":
-            n+=1
-    return n
+    catenae_idx = {cxn:i for i, cxn in enumerate(dutils.load_catenae_set(catenae_fpath, math.inf))}
+    with open(output_dir.joinpath("catenae.idx"), "w") as fout_catenae:
+        for cxn, idx in catenae_idx.items():
+            print(f"{idx}\t{cxn}", file=fout_catenae)
+
+    filenames = input_dir.iterdir()
+
+    if multiprocessing:
+        process_map(functools.partial(compute_sentence_matrix, output_dir=output_dir,
+                                      catenae_idx=catenae_idx),
+                    filenames, max_workers=n_workers)
+    else:
+        for filename in filenames:
+            compute_sentence_matrix(filename, output_dir, catenae_idx)
 
 
-def strip_underscore(cxn: List[str]) -> str:
-    """_summary_
 
-    Args:
-        cxn (List[str]): _description_
+def compute_sentence_matrix(filename: Path, output_dir: Path, catenae_idx: Dict[str, int]) -> None:
 
-    Returns:
-        str: _description_
-    """
+    basename = filename.name
 
-    # print(cxn)
+    with open(filename) as fin:
+        with open(output_dir.joinpath(f"{basename}.index"), "w") as fout_index:
+            print("PRINTED\tSENTENCE\tNODES\tEDGES\tLINEAR", file=fout_index)
 
-    new_cxn = [x for x in cxn if not x == "_"]
-    # print("|".join(new_cxn))
-    return "|".join(new_cxn)
+            fin_lines = fin.readlines()
+
+            mat = []
+            mat_count = 0
+
+            for line in tqdm.tqdm(fin_lines):
+                line = line.strip()
+
+                if line:
+                    mat.append(line.split("\t"))
+                else:
+                    number_of_connections = 0
+                    mat_count_str = str(mat_count).zfill(4)
+
+                    if mat:
+
+                        rev_mat = [[x[i] for x in mat] for i in range(len(mat[0]))]
+                        full_sentence = rev_mat[0]
+
+                        if len(rev_mat) > 1:
+
+                            full_sentence, search_space = rev_mat[0], rev_mat[1:]
+
+                            search_space_dict = collections.defaultdict(list)
+                            for cxn in search_space:
+                                search_space_dict[catenae_idx[gutils.strip_underscore(cxn)]].append(cxn)
+
+                            search_space_uniquedict = {}
+                            for i, el_lst in search_space_dict.items():
+                                if len(el_lst) == 1:
+                                    search_space_uniquedict[str(i)] = el_lst[0]
+                                else:
+                                    idx = 1
+                                    for el in el_lst:
+                                        search_space_uniquedict[f"{str(i)}_{idx}"] = el
+                                        idx += 1
+
+
+                            prog_idx = 1
+                            prog_idx_dict = {}
+                            for dict_key in search_space_uniquedict:
+                                # print(f"{prog_idx}\t{dict_key}", file=fout_map)
+                                prog_idx_dict[dict_key] = prog_idx
+                                prog_idx += 1
+
+                            lst_to_print = []
+                            for i, cxn1 in search_space_uniquedict.items():
+                                for j, cxn2 in search_space_uniquedict.items():
+                                    if j>i:
+                                        if gutils.matchable(cxn1, cxn2):
+                                            number_of_connections += 1
+                                            lst_to_print.append(f"{prog_idx_dict[i]} {prog_idx_dict[j]}")
+
+
+
+                            if number_of_connections > 0:
+                                with open(output_dir.joinpath(f"{basename}_{mat_count_str}.mtx"), "w") as fout_matrix, \
+                                open(output_dir.joinpath(f"{basename}_{mat_count_str}.map"), "w") as fout_map:
+
+                                    print("GRAPH_IDX\tOVERALL_IDX", file=fout_map)
+                                    for dict_key, prog_idx in prog_idx_dict.items():
+                                        print(f"{prog_idx}\t{dict_key}", file=fout_map)
+
+                                    print("%%MatrixMarket matrix coordinate pattern symmetric", file=fout_matrix)
+                                    print("%{}".format(" ".join(full_sentence)), file=fout_matrix)
+                                    print(f"{prog_idx-1} {prog_idx-1} {number_of_connections}", file=fout_matrix)
+                                    print("\n".join(lst_to_print), file=fout_matrix)
+
+                        full_sentence = " ".join(full_sentence)
+                        if number_of_connections > 0:
+                            print(f"{1}\t{mat_count_str}\t{len(prog_idx_dict)}\t{number_of_connections}\t{full_sentence}", file=fout_index)
+                        else:
+                            print(f"{0}\t{mat_count_str}\t0\t0\t{full_sentence}", file=fout_index)
+
+                        mat_count += 1
+                        mat = []
 
 
 def collapse(filename: Path, output_dir: Path, input_dir: Path,
-             catenae_idx: Dict[int, str]) -> None:
+             catenae_idx: Dict[str, int]) -> None:
     """_summary_
 
     Args:
@@ -322,7 +371,9 @@ def collapse(filename: Path, output_dir: Path, input_dir: Path,
 #                    if len(rev_mat) > 1 and len(rev_mat) < 200: #TODO: check here
 
                     if len(rev_mat) > 1:
+
                         full_sentence, search_space = rev_mat[0], rev_mat[1:]
+                        # print(" ".join(full_sentence))
                         len_sentence = len(full_sentence)
                         # search_space = [(not_underscore(el), el) for el in search_space]
 
@@ -370,7 +421,7 @@ def collapse(filename: Path, output_dir: Path, input_dir: Path,
                         print("\t".join(search_space_uniquedict.keys()), file=fout_cxns)
 
                         for solution, built_from_lst in solutions.items():
-                            solution = add_lexical_items(full_sentence, list(solution))
+                            solution = gutils.add_lexical_items(full_sentence, list(solution))
                             to_print = " ".join(solution)
 
                             for built_from in built_from_lst:
@@ -394,6 +445,5 @@ def collapse(filename: Path, output_dir: Path, input_dir: Path,
                                 # "\t\t", " ".join(solution),
                                 # "\t", built_from_str)
                 mat = []
-
 
 # TODO: switch to tqdm multiprocess

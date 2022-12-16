@@ -353,6 +353,23 @@ def glassify_matrix(args: argparse.Namespace) -> None:
                             multiprocess, n_workers)
 
 
+def sentence_matrix(args:argparse.Namespace) -> None:
+    """_summary_
+
+    Args:
+        args (argparse.Namespace): Object for storing attributes provided as parameters.
+    """
+
+    output_dir = futils.check_or_create_dir(args.output_dir)
+    input_dir = futils.check_path(args.input_dir)
+    catenae_fpath = futils.check_path(args.catenae)
+    multiprocess = args.multiprocessing
+    n_workers = args.n_workers
+
+    glassify.sentence_matrix(output_dir, input_dir, catenae_fpath,
+                             multiprocess, n_workers)
+
+
 def glassify_collapse(args: argparse.Namespace) -> None:
     """Dispatch parameters for projecting catenae on data.
 
