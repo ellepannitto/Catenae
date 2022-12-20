@@ -348,12 +348,12 @@ def main() -> None:
     parser_glassmatrix.set_defaults(func=mutils.glassify_matrix)
 
     #Create input for PMC
-    parser_sentencematrix = subparsers.add_parser("sentence-matrix",
-                                                  description="create matrix for each sentence",
-                                                  help="create matrix for each sentence",
+    parser_sentencematrix = subparsers.add_parser("sentence-graph",
+                                                  description="create graph for each sentence",
+                                                  help="create graph for each sentence",
                                                   formatter_class=ArgumentDefaultsHelpFormatter)
-    parser_sentencematrix.add_argument("-o", "--output-dir", default="data/output_sentencematrix/",
-                                       help="path to output dir, default is data/output_sentencematrix/")
+    parser_sentencematrix.add_argument("-o", "--output-dir", default="data/output_sentencegraph/",
+                                       help="path to output dir, default is data/output_sentencegraph/")
     parser_sentencematrix.add_argument("-i", "--input-dir", required=True,
                                        help="path to input folder containing matrices")
     parser_sentencematrix.add_argument("-c", "--catenae", required=True,
@@ -362,7 +362,7 @@ def main() -> None:
                                        help="set to true for multiprocessing version")
     parser_sentencematrix.add_argument("--n-workers", type=int, default=4,
                                        help="number of processes")
-    parser_sentencematrix.set_defaults(func=mutils.sentence_matrix)
+    parser_sentencematrix.set_defaults(func=mutils.sentence_graph)
 
     # Collapses matrix to project list of catenae on data
     parser_glasscollapse = subparsers.add_parser("glassify-collapse",
@@ -381,6 +381,21 @@ def main() -> None:
     parser_glasscollapse.add_argument("--chunksize", type=int, default=10,
                                       help="size of chunks for multiprocess")
     parser_glasscollapse.set_defaults(func=mutils.glassify_collapse)
+
+    # Find maximal cliques and
+    parser_findcliques = subparsers.add_parser("find-cliques",
+                                               description="Find maximal cliques",
+                                               help="find maximal cliques",
+                                               formatter_class=ArgumentDefaultsHelpFormatter)
+    parser_findcliques.add_argument("-o", "--output-dir", default="data/output_cliques/",
+                                    help="path to output dir, default is data/output_cliques/")
+    parser_findcliques.add_argument("-i", "--input-dir", required=True,
+                                    help="path to input folder containing per-sentences graphs")
+    parser_findcliques.add_argument("-b", "--bin-size", type=int, default=5,
+                                    help="size of step for binning sentences")
+    parser_findcliques.add_argument("--batch-size", type=int, default=1000,
+                                    help="sentences batched in a single file")
+    parser_findcliques.set_defaults(func=mutils.find_cliques)
 
 
     args = root_parser.parse_args()

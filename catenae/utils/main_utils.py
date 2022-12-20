@@ -353,7 +353,7 @@ def glassify_matrix(args: argparse.Namespace) -> None:
                             multiprocess, n_workers)
 
 
-def sentence_matrix(args:argparse.Namespace) -> None:
+def sentence_graph(args:argparse.Namespace) -> None:
     """_summary_
 
     Args:
@@ -366,8 +366,8 @@ def sentence_matrix(args:argparse.Namespace) -> None:
     multiprocess = args.multiprocessing
     n_workers = args.n_workers
 
-    glassify.sentence_matrix(output_dir, input_dir, catenae_fpath,
-                             multiprocess, n_workers)
+    glassify.sentence_graph(output_dir, input_dir, catenae_fpath,
+                            multiprocess, n_workers)
 
 
 def glassify_collapse(args: argparse.Namespace) -> None:
@@ -386,5 +386,14 @@ def glassify_collapse(args: argparse.Namespace) -> None:
     glassify.collapse_matrix(output_dir, input_dir, catenae_fpath,
                              multiprocess, n_workers, chunksize)
 
+
+def find_cliques(args: argparse.Namespace) -> None:
+
+    output_dir = futils.check_or_create_dir(args.output_dir)
+    input_dir = futils.check_path(args.input_dir)
+    bin_size = args.bin_size
+    batch_size = args.batch_size
+
+    glassify.find_cliques(output_dir, input_dir, bin_size, batch_size)
 
 #TODO: fix docstrings

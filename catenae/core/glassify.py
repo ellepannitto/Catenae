@@ -232,7 +232,7 @@ def collapse_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
 
 
 
-def sentence_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
+def sentence_graph(output_dir: Path, input_dir: Path, catenae_fpath: Path,
                     multiprocessing: bool, n_workers: int) -> None:
 
     catenae_idx = {cxn:i for i, cxn in enumerate(dutils.load_catenae_set(catenae_fpath, math.inf))}
@@ -243,16 +243,16 @@ def sentence_matrix(output_dir: Path, input_dir: Path, catenae_fpath: Path,
     filenames = input_dir.iterdir()
 
     if multiprocessing:
-        process_map(functools.partial(compute_sentence_matrix, output_dir=output_dir,
+        process_map(functools.partial(compute_sentence_graph, output_dir=output_dir,
                                       catenae_idx=catenae_idx),
                     filenames, max_workers=n_workers)
     else:
         for filename in filenames:
-            compute_sentence_matrix(filename, output_dir, catenae_idx)
+            compute_sentence_graph(filename, output_dir, catenae_idx)
 
 
 
-def compute_sentence_matrix(filename: Path, output_dir: Path, catenae_idx: Dict[str, int]) -> None:
+def compute_sentence_graph(filename: Path, output_dir: Path, catenae_idx: Dict[str, int]) -> None:
 
     basename = filename.name
 
@@ -297,7 +297,6 @@ def compute_sentence_matrix(filename: Path, output_dir: Path, catenae_idx: Dict[
                                         search_space_uniquedict[f"{str(i)}_{idx}"] = el
                                         idx += 1
 
-
                             prog_idx = 1
                             prog_idx_dict = {}
                             for dict_key in search_space_uniquedict:
@@ -319,13 +318,15 @@ def compute_sentence_matrix(filename: Path, output_dir: Path, catenae_idx: Dict[
                                 with open(output_dir.joinpath(f"{basename}_{mat_count_str}.mtx"), "w") as fout_matrix, \
                                 open(output_dir.joinpath(f"{basename}_{mat_count_str}.map"), "w") as fout_map:
 
-                                    print("GRAPH_IDX\tOVERALL_IDX", file=fout_map)
+                                    print("GRAPH_IDX\tOVERALL_IDX\tCATENA", file=fout_map)
                                     for dict_key, prog_idx in prog_idx_dict.items():
-                                        print(f"{prog_idx}\t{dict_key}", file=fout_map)
+                                        catena = search_space_uniquedict[dict_key]
+                                        catena_str = " ".join(catena)
+                                        print(f"{prog_idx}\t{dict_key}\t{catena_str}", file=fout_map)
 
                                     print("%%MatrixMarket matrix coordinate pattern symmetric", file=fout_matrix)
                                     print("%{}".format(" ".join(full_sentence)), file=fout_matrix)
-                                    print(f"{prog_idx-1} {prog_idx-1} {number_of_connections}", file=fout_matrix)
+                                    print(f"{prog_idx} {prog_idx} {number_of_connections}", file=fout_matrix)
                                     print("\n".join(lst_to_print), file=fout_matrix)
 
                         full_sentence = " ".join(full_sentence)
@@ -446,4 +447,186 @@ def collapse(filename: Path, output_dir: Path, input_dir: Path,
                                 # "\t", built_from_str)
                 mat = []
 
-# TODO: switch to tqdm multiprocess
+
+def find_cliques(output_dir: Path, input_dir: Path, bin_size: int, batch_size: int) -> None:
+    """_summary_
+
+    Args:
+        output_dir (Path): _description_
+        input_dir (Path): _description_
+        bin_size (int): _description_
+    """
+
+    min_nodes, max_nodes = 1000, 0
+    min_edges, max_edges = 1000, 0
+    index_files_it = tqdm.tqdm(input_dir.glob("*.index"),
+                               bar_format="{desc:60.60s}: {percentage:3.0f}%|{bar}{r_bar}")
+    files_number = 0
+    logger.info("Finding min and max nodes")
+    for filename in index_files_it:
+        files_number += 1
+        basename = filename.name
+        index_files_it.set_description(basename)
+        with open(filename) as fin:
+            header = fin.readline()
+
+            for line in fin:
+                line = line.strip().split("\t")
+
+                flag, idx, nodes, edges, sentence = line
+                flag = int(flag)
+                nodes = int(nodes)
+                edges = int(edges)
+
+                if flag == 1:
+                    if nodes < min_nodes:
+                        min_nodes = nodes
+                    if nodes > max_nodes:
+                        max_nodes = nodes
+                    if edges < min_edges:
+                        min_edges = edges
+                    if edges > max_edges:
+                        max_edges = edges
+
+    # print(min_nodes, max_nodes)
+    # print(min_edges, max_edges)
+
+    bins = [[] for _ in range((((max_nodes-min_nodes)//bin_size)+1)) ]
+
+    index_files_it = tqdm.tqdm(input_dir.glob("*.index"), total=files_number,
+                               bar_format="{desc:60.60s}: {percentage:3.0f}%|{bar}{r_bar}")
+    logger.info("Splitting sentences into bins")
+    for filename in index_files_it:
+        basename = filename.name
+        index_files_it.set_description(basename)
+        rootname = basename.split(".")[0]
+
+        with open(filename) as fin:
+            header = fin.readline()
+
+            for line in fin:
+                line = line.strip().split("\t")
+
+                flag, idx, nodes, edges, sentence = line
+                flag = int(flag)
+                nodes = int(nodes)
+                edges = int(edges)
+                if flag == 1:
+                    idx_bin = (nodes-min_nodes)//bin_size
+                    bins[idx_bin].append((rootname, idx, nodes, edges))
+
+    # catenae_idx = {cxn:i for i, cxn in enumerate(dutils.load_catenae_set(input_dir.joinpath("catenae.idx"), math.inf))}
+    # reverse_catenae_idx = {i:cxn for }
+
+    for i, bin in enumerate(bins):
+        logger.info(f"sentences containing {(i*bin_size)+min_nodes} TO {((i+1)*bin_size)+min_nodes-1} nodes: {len(bin)}")
+
+
+    with open(output_dir.joinpath("computing_times.report"), "w") as fout_report:
+        for i, bin in enumerate(bins): #TODO: restrict computation to only some bins
+
+            print(f"# SENTENCES CONTAINING {(i*bin_size)+min_nodes} TO {((i+1)*bin_size)+min_nodes-1} NODES", file=fout_report)
+            logger.info(f"projecting sentences containing {(i*bin_size)+min_nodes} TO {((i+1)*bin_size)+min_nodes-1} nodes")
+
+            printed_sentences = 0
+            batch = 0
+            batch_str = str(batch).zfill(5)
+            fout_sentences = open(output_dir.joinpath(f"nodes_{(i*bin_size)+min_nodes}_to_{((i+1)*bin_size)+min_nodes-1}_batch{batch_str}"), "w")
+
+            for rootname, idx, nodes, edges in tqdm.tqdm(bin):
+                start = time.time()
+
+                map_path = input_dir.joinpath(f"{rootname}_{idx}.map")
+                mtx_path = input_dir.joinpath(f"{rootname}_{idx}.mtx")
+
+                sentence, solutions = project_sentence(output_dir, rootname, idx, map_path, mtx_path)
+
+                print(f"%{rootname} {idx}", file=fout_sentences)
+                print(sentence, file=fout_sentences)
+                for solution, cliques in solutions.items():
+                    str_to_print = " ".join(solution)
+                    for clique in cliques:
+                        str_to_print += "\t"+" ".join(str(i) for i in clique)
+                    print(str_to_print, file=fout_sentences)
+                print("\n", file=fout_sentences)
+
+                end = time.time()
+                elapsed_time = end-start
+
+                printed_sentences += 1
+                if printed_sentences == batch_size:
+                    fout_sentences.close()
+                    printed_sentences = 0
+                    batch += 1
+                    batch_str = str(batch).zfill(5)
+                    fout_sentences = open(output_dir.joinpath(f"nodes_{(i*bin_size)+min_nodes}_to_{((i+1)*bin_size)+min_nodes-1}_batch{batch_str}"), "w")
+
+
+                print(f"{rootname}\t{idx}\t{nodes}\t{edges}\t{elapsed_time}", file=fout_report)
+
+            print("\n", file=fout_report)
+
+            fout_sentences.close()
+
+
+def project_sentence(output_dir: Path, rootname: str, idx: str,
+                     map_path: Path, mtx_path: Path) -> List[str]:
+    """_summary_
+
+    Args:
+        output_dir (_type_): _description_
+        rootname (_type_): _description_
+        idx (_type_): _description_
+        map_path (_type_): _description_
+        mtx_path (_type_): _description_
+    """
+    len_sentence = 0
+    G = nit.graph.Graph()
+    nodes_map = {}
+    rev_nodes_map = {}
+    cxn_map = {}
+    with open(map_path) as fin:
+        fin.readline()
+
+        for line in fin:
+            graph_idx, global_idx, cxn = line.strip().split("\t")
+            graph_idx = int(graph_idx)
+            cxn = cxn.split(" ")
+            len_sentence = len(cxn)
+
+            new_node = G.addNode()
+            nodes_map[graph_idx] = new_node
+            rev_nodes_map[new_node] = graph_idx
+            cxn_map[new_node] = cxn
+
+    with open(mtx_path) as fin:
+        fin.readline()
+        sentence = fin.readline().strip()
+        fin.readline()
+
+        for line in fin:
+            i, j = line.strip().split(" ")
+            i, j = int(i), int(j)
+            G.addEdge(nodes_map[i], nodes_map[j])
+
+    # logger.info("graph loaded")
+    cliques = nit.clique.MaximalCliques(G).run()
+    # logger.info("cliques computed")
+    solutions = collections.defaultdict(list)
+
+    for element in cliques.getCliques():
+        # print(element)
+        rev_element = [rev_nodes_map[i] for i in element]
+
+        cxn_element = [cxn_map[i] for i in element]
+
+        projected_sentence = ["_"]*len_sentence
+
+        for cxn in cxn_element:
+            projected_sentence, _ = gutils.update(projected_sentence, cxn)
+
+        solutions[tuple(projected_sentence)].append(rev_element)
+
+    return sentence, solutions
+
+# TODO: switch to tqdm multiprocess""
